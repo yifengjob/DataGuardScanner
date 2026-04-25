@@ -48,7 +48,10 @@
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
       "timestampUrl": "",
-      "allowDowngrades": true
+      "allowDowngrades": true,
+      "wix": {
+        "language": "zh-CN"
+      }
     },
     "macOS": {
       "frameworks": [],
