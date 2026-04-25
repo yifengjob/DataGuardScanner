@@ -1,0 +1,247 @@
+<template>
+  <div class="modal-overlay" @click.self="$emit('close')">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>关于 DataGuard Scanner</h3>
+        <button class="close-btn" @click="$emit('close')">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="about-content">
+          <img src="../assets/icon.svg" alt="DataGuard Scanner Logo" class="app-icon" />
+          <h2 class="app-name">DataGuard Scanner</h2>
+          <p class="app-version">版本 1.0.0</p>
+          
+          <div class="app-description">
+            <h4>软件介绍</h4>
+            <p>
+              DataGuard Scanner 是一款专业的敏感数据扫描工具，能够帮助您快速发现文件系统中的敏感信息，
+              包括身份证号、手机号、邮箱地址、银行卡号、地址、IP地址和密码等。
+            </p>
+            <p>
+              本软件采用先进的正则匹配算法，支持多种文件格式（文本、代码、PDF、Office文档等），
+              提供实时扫描进度显示、敏感内容高亮预览、文件操作和报告导出等功能。
+            </p>
+            <p>
+              软件采用便携设计，无需安装即可使用，支持 Windows、macOS 和 Linux 平台。
+            </p>
+          </div>
+          
+          <div class="author-info">
+            <h4>作者信息</h4>
+            <p><strong>开发单位：</strong>长沙农商银行</p>
+            <p><strong>开发者：</strong>易峰</p>
+            <p><strong>联系邮箱：</strong><a href="mailto:yifengjob@qq.com">yifengjob@qq.com</a></p>
+          </div>
+          
+          <div class="features">
+            <h4>主要功能</h4>
+            <ul>
+              <li>✅ 支持多种敏感数据类型检测</li>
+              <li>✅ 智能目录树选择与过滤</li>
+              <li>✅ 实时扫描进度显示</li>
+              <li>✅ 敏感内容高亮预览</li>
+              <li>✅ 支持 PDF 和 Office 文档解析</li>
+              <li>✅ 扫描结果导出为XLSX/CSV/JSON</li>
+              <li>✅ 跨平台支持（Windows/macOS/Linux）</li>
+              <li>✅ 便携免安装设计</li>
+            </ul>
+          </div>
+          
+          <div class="copyright">
+            <p>© 2026 长沙农商银行. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-primary" @click="$emit('close')">关闭</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+defineEmits<{
+  close: []
+}>()
+</script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #999;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.about-content {
+  text-align: center;
+}
+
+.app-icon {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 16px;
+  object-fit: contain;
+}
+
+.app-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0 0 8px 0;
+}
+
+.app-version {
+  font-size: 14px;
+  color: #999;
+  margin: 0 0 24px 0;
+}
+
+.app-description,
+.author-info,
+.features {
+  text-align: left;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+}
+
+.app-description h4,
+.author-info h4,
+.features h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: #333;
+}
+
+.app-description p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #666;
+  margin: 8px 0;
+}
+
+.author-info p {
+  font-size: 14px;
+  margin: 8px 0;
+  color: #666;
+}
+
+.author-info a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.author-info a:hover {
+  text-decoration: underline;
+}
+
+.features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.features li {
+  font-size: 14px;
+  color: #666;
+  padding: 6px 0;
+  line-height: 1.6;
+}
+
+.copyright {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.copyright p {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn {
+  padding: 8px 24px;
+  border: 1px solid var(--border-color);
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #40a9ff;
+}
+</style>

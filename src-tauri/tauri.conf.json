@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DataGuard Scanner",
+  "version": "../package.json",
+  "identifier": "com.dataguard.scanner",
+  "build": {
+    "beforeDevCommand": "pnpm --filter dataguard-scanner-frontend dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm --filter dataguard-scanner-frontend build",
+    "frontendDist": "../frontend/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "DataGuard Scanner - 敏感数据扫描工具",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 1000,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [],
+    "publisher": "DataGuard Team",
+    "copyright": "Copyright © 2024 DataGuard Scanner",
+    "category": "DeveloperTool",
+    "shortDescription": "Sensitive Data Scanner",
+    "longDescription": "A powerful tool for scanning and detecting sensitive data in files",
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "allowDowngrades": true
+    },
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.15",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "entitlements": null
+    },
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libappindicator3-1"],
+        "files": {}
+      }
+    }
+  }
+}

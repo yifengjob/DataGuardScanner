@@ -1,0 +1,36 @@
+# Rust
+target/
+**/*.rs.bk
+# Cargo.lock 必须提交，用于锁定依赖版本
+# Cargo.lock
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.pnpm-store/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Config (optional, uncomment if you don't want to track config)
+# data/config.json
+
+# Documentation (保留 README.md 等项目文档)
+需求.md
+跨平台构建指南.md

@@ -1,0 +1,30 @@
+[workspace]
+members = ["src-tauri"]
+resolver = "2"
+
+# 发布优化配置
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+# Windows 32位优化配置
+[profile.release-i686-pc-windows-msvc]
+inherits = "release"
+
+# Windows 64位优化配置
+[profile.release-x86_64-pc-windows-msvc]
+inherits = "release"
+
+# Linux 优化配置
+[profile.release-x86_64-unknown-linux-gnu]
+inherits = "release"
+
+# macOS Intel 优化配置
+[profile.release-x86_64-apple-darwin]
+inherits = "release"
+
+# macOS ARM 优化配置
+[profile.release-aarch64-apple-darwin]
+inherits = "release"
