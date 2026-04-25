@@ -84,9 +84,9 @@ defineEmits<{
 .modal-container {
   background-color: white;
   border-radius: 8px;
-  width: 90%;
-  max-width: 700px;
+  width: min(90%, 700px);
   max-height: 85vh;
+  min-width: 400px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);

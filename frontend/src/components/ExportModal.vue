@@ -199,8 +199,8 @@ const handleExport = async () => {
 .modal-container {
   background-color: white;
   border-radius: 8px;
-  width: 600px;
-  max-height: 80vh;
+  width: min(600px, 90vw);
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);

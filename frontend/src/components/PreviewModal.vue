@@ -135,10 +135,10 @@ const handleCopyContent = async () => {
 .modal-container {
   background-color: white;
   border-radius: 8px;
-  width: 80%;
-  max-width: 900px;
-  height: 80%;
-  max-height: 700px;
+  width: min(80%, 900px);
+  height: min(80%, 700px);
+  min-width: 600px;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);

@@ -12,6 +12,7 @@ mod environment;
 
 use commands::*;
 use environment::check_environment;
+use tauri::Manager;
 
 fn main() {
     // 初始化日志，过滤掉 lopdf 库的ERROR级别日志
@@ -96,6 +97,41 @@ fn main() {
             load_config,
             check_system_environment,
         ])
+        .setup(|app| {
+            // 动态计算窗口大小
+            if let Some(window) = app.get_webview_window("main") {
+                // 获取主监视器
+                if let Ok(Some(monitor)) = window.current_monitor() {
+                    let size = monitor.size();
+                    let scale_factor = monitor.scale_factor();
+                    
+                    // monitor.size() 返回物理像素，需要除以 scale_factor 得到逻辑像素
+                    // 然后取 80% 作为窗口大小
+                    let logical_width = size.width as f64 / scale_factor;
+                    let logical_height = size.height as f64 / scale_factor;
+                    
+                    let width = (logical_width * 0.8) as u32;
+                    let height = (logical_height * 0.8) as u32;
+                    
+                    // 确保最小尺寸（逻辑像素）
+                    let width = width.max(1000);
+                    let height = height.max(600);
+                    
+                    log::info!("屏幕物理尺寸: {}x{}, 逻辑尺寸: {:.0}x{:.0}, 缩放比例: {}, 窗口尺寸: {}x{}", 
+                               size.width, size.height, logical_width, logical_height, scale_factor, width, height);
+                    
+                    // 设置窗口大小（使用逻辑像素）
+                    let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize {
+                        width: width as f64,
+                        height: height as f64,
+                    }));
+                    
+                    // 居中窗口
+                    let _ = window.center();
+                }
+            }
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

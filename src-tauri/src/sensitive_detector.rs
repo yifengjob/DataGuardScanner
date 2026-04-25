@@ -32,9 +32,13 @@ lazy_static! {
         SensitiveRuleDef {
             id: "bank_card",
             name: "银行卡号",
-            // 16-19位纯数字
-            // 注意：Rust regex不支持look-around，需要在代码中过滤前后数字
-            pattern: r"\d{16,19}",
+            // 银行卡号：以特定卡BIN开头，16-19位
+            // 常见卡BIN：
+            // - 银联借记卡：62开头
+            // - Visa：4开头
+            // - MasterCard：51-55或2开头
+            // - 银联信用卡：62、60等
+            pattern: r"(?:62|60|4|5[1-5]|2[2-7])\d{14,18}",
             enabled_by_default: true,
         },
         SensitiveRuleDef {

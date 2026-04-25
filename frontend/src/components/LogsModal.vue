@@ -77,9 +77,9 @@ const handleClearLogs = () => {
 .modal-container {
   background-color: white;
   border-radius: 8px;
-  width: 700px;
-  height: 60vh;
-  max-height: 500px;
+  width: min(700px, 90vw);
+  height: min(60vh, 500px);
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);

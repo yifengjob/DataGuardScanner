@@ -119,6 +119,10 @@ jobs:
       - name: Build Windows Portable EXE
         if: startsWith(matrix.platform, 'windows')
         run: |
+          # First build frontend from workspace root
+          pnpm --filter dataguard-scanner-frontend build
+          
+          # Then build Rust backend
           cd src-tauri
           cargo build --release --target ${{ matrix.target }}
           

@@ -9,6 +9,13 @@
   --bg-color: #fff;
   --bg-hover: #f5f5f5;
   --bg-selected: #e6f7ff;
+  
+  /* 响应式字体大小 - 基于 viewport */
+  --font-size-base: clamp(14px, 1.2vw, 16px);
+  --font-size-sm: clamp(12px, 1vw, 14px);
+  --font-size-lg: clamp(16px, 1.4vw, 18px);
+  --font-size-xl: clamp(18px, 1.6vw, 20px);
+  --font-size-xxl: clamp(20px, 2vw, 24px);
 }
 
 * {
@@ -26,6 +33,7 @@ body {
   color: var(--text-color);
   background-color: var(--bg-color);
   overflow: hidden;
+  font-size: var(--font-size-base);
 }
 
 #app {
@@ -104,4 +112,65 @@ mark {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* 响应式设计 - 小屏幕 */
+@media (max-width: 1200px) {
+  :root {
+    --font-size-base: 13px;
+    --font-size-sm: 11px;
+    --font-size-lg: 15px;
+    --font-size-xl: 17px;
+    --font-size-xxl: 19px;
+  }
+}
+
+/* 响应式设计 - 中等屏幕 */
+@media (min-width: 1201px) and (max-width: 1920px) {
+  :root {
+    --font-size-base: 14px;
+    --font-size-sm: 12px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-xxl: 20px;
+  }
+}
+
+/* 响应式设计 - 大屏幕 */
+@media (min-width: 1921px) and (max-width: 2560px) {
+  :root {
+    --font-size-base: 15px;
+    --font-size-sm: 13px;
+    --font-size-lg: 17px;
+    --font-size-xl: 19px;
+    --font-size-xxl: 22px;
+  }
+}
+
+/* 响应式设计 - 超大屏幕（4K+） */
+@media (min-width: 2561px) {
+  :root {
+    --font-size-base: 16px;
+    --font-size-sm: 14px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-xxl: 24px;
+  }
+}
+
+/* Retina/高DPI屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* 模态框响应式优化 - 小屏幕 */
+@media (max-width: 768px) {
+  .modal-container {
+    width: 95vw !important;
+    max-height: 90vh !important;
+  }
 }
