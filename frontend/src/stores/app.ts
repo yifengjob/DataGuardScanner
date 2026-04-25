@@ -155,6 +155,31 @@ export const useAppStore = defineStore('app', () => {
     selectedPaths.value.clear()
   }
   
+  // 获取有效的扫描路径（只保留叶子节点，避免重复扫描）
+  // 例如：如果 C:\Users 和 C:\Users\John 都选中了，只返回 C:\Users\John
+  function getEffectiveScanPaths(): string[] {
+    const paths = Array.from(selectedPaths.value)
+    
+    // 按路径长度排序（短的在前）
+    paths.sort((a, b) => a.length - b.length)
+    
+    const effectivePaths: string[] = []
+    
+    for (const path of paths) {
+      // 检查这个路径是否是其他已选路径的祖先
+      const hasDescendantSelected = paths.some(otherPath => 
+        otherPath !== path && otherPath.startsWith(path + '\\')
+      )
+      
+      // 如果没有子孙节点被选中，则这是一个有效的扫描路径
+      if (!hasDescendantSelected) {
+        effectivePaths.push(path)
+      }
+    }
+    
+    return effectivePaths
+  }
+  
   return {
     scanResults,
     isScanning,
@@ -176,5 +201,6 @@ export const useAppStore = defineStore('app', () => {
     deselectAllPaths,
     selectAllDirectories,
     deselectAllDirectories,
+    getEffectiveScanPaths,
   }
 })

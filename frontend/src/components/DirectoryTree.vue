@@ -42,20 +42,46 @@ onMounted(async () => {
     
     if (isWindows) {
       // Windows: 获取所有磁盘驱动器
-      const drives = ['C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:']
+      // 常见的驱动器列表，按字母顺序
+      const possibleDrives = [
+        'A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:',
+        'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:',
+        'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:'
+      ]
+      
       const allNodes: DirectoryNode[] = []
       
-      for (const drive of drives) {
+      // 并行检查所有可能的驱动器
+      const drivePromises = possibleDrives.map(async (drive) => {
         try {
           const nodes = await getDirectoryTree(drive + '\\')
           if (nodes.length > 0) {
-            allNodes.push(...nodes)
+            // 为每个驱动器创建一个父节点
+            return {
+              path: drive + '\\',
+              name: drive,
+              is_dir: true,
+              is_hidden: false,
+              has_children: true,
+              children: nodes
+            } as DirectoryNode
           }
         } catch (error) {
           // 驱动器不存在或无权限，跳过
           console.debug(`驱动器 ${drive} 不可访问`)
         }
-      }
+        return null
+      })
+      
+      // 等待所有检查结果
+      const results = await Promise.all(drivePromises)
+      
+      // 收集有效的驱动器节点
+      results.forEach(result => {
+        if (result) {
+          allNodes.push(result)
+        }
+      })
       
       rootNodes.value = allNodes
     } else {

@@ -185,7 +185,10 @@ const handleStartScan = async () => {
     return
   }
   
+  // 获取有效的扫描路径（只保留叶子节点）
+  const effectivePaths = appStore.getEffectiveScanPaths()
   console.log('开始扫描，选中的路径:', Array.from(appStore.selectedPaths))
+  console.log('有效的扫描路径:', effectivePaths)
   console.log('配置的扩展名:', config.value.selected_extensions)
   console.log('启用的敏感类型:', config.value.enabled_sensitive_types)
   
@@ -194,7 +197,7 @@ const handleStartScan = async () => {
   isScanning.value = true
   
   const scanConfig = {
-    selected_paths: Array.from(appStore.selectedPaths),
+    selected_paths: effectivePaths,
     selected_extensions: config.value.selected_extensions,
     enabled_sensitive_types: config.value.enabled_sensitive_types,
     ignore_dir_names: config.value.ignore_dir_names,
