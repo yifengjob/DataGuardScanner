@@ -166,11 +166,27 @@ jobs:
       # Upload Windows portable EXE separately
       - name: Upload Windows Portable EXE
         if: startsWith(matrix.platform, 'windows')
+        shell: pwsh
+        run: |
+          # Rename portable exe to include architecture
+          $targetDir = "target/${{ matrix.target }}/release"
+          $exeFile = Join-Path $targetDir "dataguard-scanner.exe"
+          if (Test-Path $exeFile) {
+            $arch = if ('${{ matrix.target }}' -match 'x86_64') { 'x64' } else { 'x86' }
+            $newName = "dataguard-scanner-${arch}-portable.exe"
+            Copy-Item $exeFile (Join-Path $targetDir $newName)
+            Write-Host "Renamed to: $newName"
+          }
+        
+      - name: Upload Windows Portable EXE Artifact
+        if: startsWith(matrix.platform, 'windows')
         uses: actions/upload-artifact@v4
         with:
           name: dataguard-scanner-${{ matrix.platform }}-portable
-          path: target/${{ matrix.target }}/release/*.exe
-          if-no-files-found: error
+          path: |
+            target/${{ matrix.target }}/release/dataguard-scanner-x64-portable.exe
+            target/${{ matrix.target }}/release/dataguard-scanner-x86-portable.exe
+          if-no-files-found: ignore
 
   release:
     needs: build
@@ -196,7 +212,6 @@ jobs:
             artifacts/**/*.msi
             artifacts/**/*.AppImage
             artifacts/**/*.dmg
-            artifacts/**/*.app
           draft: false
           prerelease: false
           generate_release_notes: true
