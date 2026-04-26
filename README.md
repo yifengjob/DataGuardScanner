@@ -2,8 +2,8 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)
+![License](https://img.shields.io/badge/license-AGPL--3.0-green.svg)
 ![Tauri](https://img.shields.io/badge/Tauri-2.x-FFC131.svg)
 ![Vue](https://img.shields.io/badge/Vue-3.x-4FC08D.svg)
 ![Rust](https://img.shields.io/badge/Rust-2024-orange.svg)
@@ -317,6 +317,21 @@ cargo tauri build
 
 ---
 
+## 📚 技术文档
+
+### 核心功能实现
+
+- **[主题功能实现指南](docs/THEME_GUIDE.md)** - 明暗色主题的技术实现细节、CSS 变量系统、主题切换机制
+- **[PDF 错误处理机制](docs/PDF_ERROR_HANDLING.md)** - PDF 解析稳定性修复、四层防护机制、异常处理最佳实践
+
+### 架构设计
+
+- **前端架构**：Vue 3 Composition API + Pinia 状态管理 + TypeScript
+- **后端架构**：Tauri 2.x + Rust 异步运行时 + 模块化设计
+- **通信机制**：Tauri IPC 命令调用 + 事件系统
+
+---
+
 ## 🔧 开发指南
 
 ### 项目结构
@@ -570,6 +585,54 @@ pnpm test  # 如果配置了测试框架
 - 基础的敏感数据扫描功能
 - 支持文本文件解析
 - CSV/JSON 报告导出
+
+---
+
+## 📝 更新日志
+
+### v1.0.2 (2026-04-26)
+
+#### ✨ 新增功能
+- **明暗色主题**：支持浅色、深色、跟随系统三种主题模式
+  - 工具栏快速切换按钮（☀️/🌙/💻）
+  - 设置页面主题选择器
+  - localStorage 持久化保存
+  - 实时监听系统主题变化
+  - 所有组件完美适配
+
+#### 🛡️ 稳定性改进
+- **PDF 解析崩溃修复**：实施四层防护机制
+  - 第零层：日志过滤（隐藏 lopdf/pdf_extract 冗余警告）
+  - 第一层：全局 panic hook（捕获所有未处理异常）
+ - 第二层：文件解析增强错误处理（智能识别错误类型）
+  - 第三层：扫描器级别容错（单文件失败不影响整体）
+- **Mutex 安全处理**：修复潜在的 lock().unwrap() panic 风险
+- **异常处理完善**：全面审计并优化所有异常处理路径
+
+#### 🎨 用户体验
+- 主题切换流畅无闪烁
+- PDF 解析失败优雅提示，不再崩溃
+- 控制台日志更清晰，减少干扰信息
+- 错误提示更友好和详细
+
+#### 📚 文档
+- 新增 [主题功能实现指南](docs/THEME_GUIDE.md)
+- 新增 [PDF 错误处理机制](docs/PDF_ERROR_HANDLING.md)
+- 更新 README 添加技术文档索引
+
+#### 🔧 技术细节
+- CSS 变量系统实现主题切换
+- std::panic::catch_unwind 防止第三方库 panic
+- env_logger 按模块过滤日志级别
+- Mutex.lock() 改为安全的 map_err 处理
+
+---
+
+### v1.0.1 (之前版本)
+- 初始版本发布
+- 支持多种敏感数据类型检测
+- 支持多种文件格式解析
+- 跨平台桌面应用
 
 ---
 

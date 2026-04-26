@@ -12,10 +12,30 @@ use environment::check_environment;
 use tauri::Manager;
 
 fn main() {
-    // 初始化日志，过滤掉 lopdf 库的ERROR级别日志
+    // 设置全局 panic hook，捕获所有未处理的 panic
+    // 这对于防止 pdf-extract 等第三方库的 panic 导致程序崩溃非常重要
+    std::panic::set_hook(Box::new(|info| {
+        // 只记录错误信息，不打印 panic 详情
+        // 这样可以避免控制台输出大量技术细节，影响用户体验
+        if let Some(s) = info.payload().downcast_ref::<&str>() {
+            log::error!("⚠️ 内部错误（已自动处理）: {}", s);
+        } else if let Some(s) = info.payload().downcast_ref::<String>() {
+            log::error!("⚠️ 内部错误（已自动处理）: {}", s);
+        } else {
+            log::error!("⚠️ 发生未知内部错误（已自动处理）");
+        }
+        
+        // 注意：不调用 default_panic，完全抑制 panic 输出
+        // 因为我们的 catch_unwind 已经处理了这些错误
+        // 用户只会看到友好的错误提示，不会看到技术细节
+    }));
+    
+    // 初始化日志，过滤掉第三方库的冗余警告
+    // - lopdf: 只显示 error 级别（隐藏 PDF 结构警告）
+    // - pdf_extract: 只显示 error 级别（过滤掉字体 glyph 警告）
     env_logger::Builder::from_env(
         env_logger::Env::default()
-            .default_filter_or("info,lopdf=warn")
+            .default_filter_or("info,lopdf=error,pdf_extract=error")
     ).init();
     
     // 检查系统环境

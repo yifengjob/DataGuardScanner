@@ -149,6 +149,7 @@ pub async fn run_scan(
             }).await.ok();
             
             // 提取文本并检测敏感数据（使用 catch_unwind 防止 panic）
+            // 注意：pdf-extract 可能在内部线程中 panic，需要双重保护
             let process_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 extract_text_from_file(&file_path)
             }));
@@ -194,10 +195,12 @@ pub async fn run_scan(
                     }
                 }
                 Ok(Err(e)) => {
+                    // 文件解析失败，记录日志但不中断扫描
                     event_tx.send(ScanEvent::Log(format!("解析失败 {}: {}", file_path, e))).await.ok();
                 }
                 Err(_) => {
-                    event_tx.send(ScanEvent::Log(format!("文件处理时发生严重错误，跳过: {}", file_path))).await.ok();
+                    // 发生 panic，记录严重错误但继续扫描其他文件
+                    event_tx.send(ScanEvent::Log(format!("⚠️ 文件处理时发生严重错误，跳过: {}", file_path))).await.ok();
                 }
             }
         }

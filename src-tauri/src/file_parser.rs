@@ -25,14 +25,32 @@ pub fn read_pdf_file(path: &str) -> Result<String, String> {
     use pdf_extract::extract_text;
     
     // 使用 catch_unwind 捕获可能的 panic
+    // 注意：这只能捕获当前线程的 panic，对于 pdf-extract 内部线程的 panic 无效
+    // 因此我们需要在调用层也添加保护
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         extract_text(path)
     }));
     
     match result {
-        Ok(Ok(text)) => Ok(text),
-        Ok(Err(e)) => Err(format!("PDF 解析失败: {}", e)),
-        Err(_) => Err("PDF 解析过程中发生错误（可能是损坏的文件）".to_string()),
+        Ok(Ok(text)) => {
+            if text.is_empty() {
+                Err("PDF 文件中未提取到文本内容".to_string())
+            } else {
+                Ok(text)
+            }
+        },
+        Ok(Err(e)) => {
+            // 记录具体错误信息，但不暴露敏感细节
+            let error_msg = format!("{}", e);
+            if error_msg.contains("unsupported encoding") || error_msg.contains("encoding") {
+                Err("PDF 文件使用了不支持的字符编码，无法解析".to_string())
+            } else if error_msg.contains("corrupt") || error_msg.contains("damaged") {
+                Err("PDF 文件已损坏或不完整".to_string())
+            } else {
+                Err(format!("PDF 解析失败: {}", e))
+            }
+        },
+        Err(_) => Err("PDF 解析过程中发生严重错误（可能是损坏的文件或不支持的格式）".to_string()),
     }
 }
 

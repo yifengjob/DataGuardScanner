@@ -192,7 +192,10 @@ pub fn scan_cancel(state: State<'_, ScanState>) -> Result<bool, String> {
 /// 取消预览任务
 #[tauri::command]
 pub fn cancel_preview() -> Result<bool, String> {
-    if let Some(flag) = LATEST_PREVIEW_CANCEL_FLAG.lock().unwrap().as_ref() {
+    let guard = LATEST_PREVIEW_CANCEL_FLAG.lock()
+        .map_err(|e| format!("获取锁失败: {}", e))?;
+    
+    if let Some(flag) = guard.as_ref() {
         flag.store(true, Ordering::Relaxed);
         log::debug!("已请求取消预览任务");
         Ok(true)
@@ -212,7 +215,8 @@ pub async fn preview_file(path: String, max_bytes: Option<usize>) -> Result<Prev
     // 创建取消标志，并设置为最新的预览任务
     let cancel_flag = Arc::new(AtomicBool::new(false));
     {
-        let mut latest_flag = LATEST_PREVIEW_CANCEL_FLAG.lock().unwrap();
+        let mut latest_flag = LATEST_PREVIEW_CANCEL_FLAG.lock()
+            .map_err(|e| format!("获取锁失败: {}", e))?;
         *latest_flag = Some(cancel_flag.clone());
     }
     
