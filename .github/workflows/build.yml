@@ -137,10 +137,22 @@ jobs:
             sudo mv /etc/apt/sources.list /etc/apt/sources.list.bak 2>/dev/null || true
             sudo rm -f /etc/apt/sources.list.d/*.list 2>/dev/null || true
             
+            # Recreate the arm64-sources.list after deletion
+            echo 'deb [arch=amd64,arm64] https://azure.archive.ubuntu.com/ubuntu jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=amd64,arm64] https://azure.archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=amd64,arm64] https://azure.archive.ubuntu.com/ubuntu jammy-backports main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            
             # Handle mirror configuration
             if [ -f /etc/apt/apt-mirrors.txt ]; then
                 sudo mv /etc/apt/apt-mirrors.txt /etc/apt/apt-mirrors.txt.bak
             fi
+            
+            # Debug: show sources configuration
+            echo "=== Sources List ==="
+            cat /etc/apt/sources.list.d/arm64-sources.list
+            echo "=== Architecture ==="
+            dpkg --print-architecture
+            dpkg --print-foreign-architectures
             
             sudo apt-get update
             
