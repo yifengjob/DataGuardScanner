@@ -169,7 +169,8 @@ const handleCopyContent = async () => {
 }
 
 .modal-container {
-  background-color: white;
+  background-color: var(--modal-bg);
+  color: var(--text-color);
   border-radius: 8px;
   width: min(80%, 900px);
   height: min(80%, 700px);
@@ -220,8 +221,8 @@ const handleCopyContent = async () => {
 }
 
 .close-btn:hover {
-  color: #333;
-  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--text-color);
+  background-color: var(--bg-hover);
   transform: rotate(90deg);
 }
 
@@ -249,7 +250,7 @@ const handleCopyContent = async () => {
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
+  border: 4px solid var(--border-color);
   border-top: 4px solid var(--primary-color);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -262,7 +263,7 @@ const handleCopyContent = async () => {
 
 .loading-text {
   font-size: 16px;
-  color: #333;
+  color: var(--text-color);
   font-weight: 500;
 }
 
@@ -311,7 +312,8 @@ const handleCopyContent = async () => {
 .btn {
   padding: 6px 16px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;

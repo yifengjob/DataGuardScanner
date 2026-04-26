@@ -197,7 +197,8 @@ const handleExport = async () => {
 }
 
 .modal-container {
-  background-color: white;
+  background-color: var(--modal-bg);
+  color: var(--text-color);
   border-radius: 8px;
   width: min(600px, 90vw);
   max-height: 85vh;
@@ -229,7 +230,7 @@ const handleExport = async () => {
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--text-color);
 }
 
 .modal-body {
@@ -241,7 +242,7 @@ const handleExport = async () => {
 .no-data-hint {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
+  color: var(--text-secondary);
 }
 
 .no-data-hint p {
@@ -251,7 +252,7 @@ const handleExport = async () => {
 
 .no-data-hint .hint-text {
   font-size: 13px;
-  color: #bbb;
+  color: var(--text-secondary);
 }
 
 .export-options {
@@ -269,7 +270,7 @@ const handleExport = async () => {
 .option-group > label {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
 }
 
 .format-options {
@@ -291,7 +292,7 @@ const handleExport = async () => {
 
 .format-option:hover {
   border-color: var(--primary-color);
-  background-color: #f0f9ff;
+  background-color: var(--bg-selected);
 }
 
 .format-option input[type="radio"] {
@@ -307,12 +308,12 @@ const handleExport = async () => {
 
 .format-info strong {
   font-size: 14px;
-  color: #333;
+  color: var(--text-color);
 }
 
 .format-desc {
   font-size: 12px;
-  color: #999;
+  color: var(--text-secondary);
 }
 
 .path-input {
@@ -326,12 +327,15 @@ const handleExport = async () => {
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 13px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }
 
 .btn-browse {
   padding: 8px 16px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 13px;
@@ -343,7 +347,7 @@ const handleExport = async () => {
 
 .summary {
   padding: 12px;
-  background-color: #f9f9f9;
+  background-color: var(--bg-hover);
   border-radius: 6px;
 }
 
@@ -356,7 +360,7 @@ const handleExport = async () => {
   margin: 0;
   padding-left: 20px;
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .summary li {
@@ -374,7 +378,8 @@ const handleExport = async () => {
 .btn {
   padding: 8px 20px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;

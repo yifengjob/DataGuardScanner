@@ -9,6 +9,14 @@
   --bg-color: #fff;
   --bg-hover: #f5f5f5;
   --bg-selected: #e6f7ff;
+  --menu-bg: #f0f0f0;
+  --toolbar-bg: #fafafa;
+  --sidebar-bg: white;
+  --modal-bg: white;
+  --input-bg: white;
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #888;
+  --scrollbar-thumb-hover: #555;
   
   /* 响应式字体大小 - 基于 viewport */
   --font-size-base: clamp(14px, 1.2vw, 16px);
@@ -16,6 +24,28 @@
   --font-size-lg: clamp(16px, 1.4vw, 18px);
   --font-size-xl: clamp(18px, 1.6vw, 20px);
   --font-size-xxl: clamp(20px, 2vw, 24px);
+}
+
+/* 暗色主题 */
+[data-theme="dark"] {
+  --primary-color: #177ddc;
+  --success-color: #49aa19;
+  --warning-color: #d89614;
+  --error-color: #cf1322;
+  --text-color: #e8e8e8;
+  --text-secondary: #a6a6a6;
+  --border-color: #434343;
+  --bg-color: #141414;
+  --bg-hover: #1f1f1f;
+  --bg-selected: #111d2c;
+  --menu-bg: #1f1f1f;
+  --toolbar-bg: #1f1f1f;
+  --sidebar-bg: #1f1f1f;
+  --modal-bg: #1f1f1f;
+  --input-bg: #141414;
+  --scrollbar-track: #1f1f1f;
+  --scrollbar-thumb: #434343;
+  --scrollbar-thumb-hover: #595959;
 }
 
 * {
@@ -102,16 +132,16 @@ mark {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* 响应式设计 - 小屏幕 */

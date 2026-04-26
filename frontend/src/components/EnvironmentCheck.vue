@@ -188,7 +188,8 @@ const exitApp = async () => {
 }
 
 .check-container {
-  background-color: white;
+  background-color: var(--modal-bg);
+  color: var(--text-color);
   border-radius: 12px;
   width: 100%;
   max-width: 700px;
@@ -225,7 +226,7 @@ const exitApp = async () => {
 .spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #f3f3f3;
+  border: 4px solid var(--border-color);
   border-top: 4px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -240,7 +241,7 @@ const exitApp = async () => {
 .system-info {
   margin-bottom: 24px;
   padding: 16px;
-  background-color: #f8f9fa;
+  background-color: var(--bg-hover);
   border-radius: 8px;
   font-size: 14px;
 }
@@ -281,7 +282,7 @@ const exitApp = async () => {
 .warning-message p,
 .error-message p {
   margin: 0 0 24px 0;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -298,12 +299,12 @@ const exitApp = async () => {
 }
 
 .issue-item.critical {
-  background-color: #fff1f0;
+  background-color: var(--bg-hover);
   border-left-color: #ff4d4f;
 }
 
 .issue-item.warning {
-  background-color: #fffbe6;
+  background-color: var(--bg-hover);
   border-left-color: #faad14;
 }
 
@@ -320,7 +321,7 @@ const exitApp = async () => {
 
 .issue-desc {
   margin: 8px 0;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -363,19 +364,20 @@ const exitApp = async () => {
 .error-actions {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid var(--border-color);
 }
 
 .hint {
-  color: #999;
+  color: var(--text-secondary);
   font-size: 13px;
   margin-bottom: 16px;
 }
 
 .btn {
   padding: 10px 24px;
-  border: 1px solid #d9d9d9;
-  background-color: white;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;

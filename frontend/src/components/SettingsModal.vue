@@ -8,6 +8,19 @@
       
       <div class="modal-body">
         <div class="settings-section">
+          <h4>外观设置</h4>
+          
+          <div class="setting-item">
+            <label>主题模式</label>
+            <select v-model="config.theme" class="theme-select">
+              <option value="light">浅色主题</option>
+              <option value="dark">深色主题</option>
+              <option value="system">跟随系统</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="settings-section">
           <h4>扫描配置</h4>
           
           <div class="setting-item">
@@ -122,6 +135,7 @@ import { ref, onMounted } from 'vue'
 import { useAppStore } from '../stores/app'
 import { storeToRefs } from 'pinia'
 import { saveConfig, getSensitiveRules } from '../utils/tauri-api'
+import { applyTheme } from '../utils/theme'
 
 const emit = defineEmits<{
   close: []
@@ -182,6 +196,8 @@ const removeSystemDir = (index: number) => {
 const handleSave = async () => {
   try {
     await saveConfig(config.value)
+    // 应用主题设置
+    applyTheme(config.value.theme as any)
     alert('配置已保存')
     emit('close')
   } catch (error) {
@@ -206,7 +222,8 @@ const handleSave = async () => {
 }
 
 .modal-container {
-  background-color: white;
+  background-color: var(--modal-bg);
+  color: var(--text-color);
   border-radius: 8px;
   width: min(600px, 90vw);
   max-height: 85vh;
@@ -282,6 +299,17 @@ const handleSave = async () => {
   padding: 5px 8px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.theme-select {
+  padding: 5px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  cursor: pointer;
 }
 
 .setting-item input[type="checkbox"] {
@@ -319,9 +347,10 @@ const handleSave = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 6px 10px;
-  background-color: #f5f5f5;
+  background-color: var(--bg-hover);
   border-radius: 4px;
   font-size: 13px;
+  color: var(--text-color);
 }
 
 .btn-remove {
@@ -348,12 +377,15 @@ const handleSave = async () => {
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 13px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }
 
 .btn-small {
   padding: 5px 12px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 13px;
@@ -374,7 +406,8 @@ const handleSave = async () => {
 .btn {
   padding: 6px 16px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;

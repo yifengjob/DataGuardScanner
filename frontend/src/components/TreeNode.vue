@@ -126,7 +126,7 @@ const handleCheck = () => {
 }
 
 .node-content.hidden {
-  color: #999;
+  color: var(--text-secondary);
   font-style: italic;
 }
 

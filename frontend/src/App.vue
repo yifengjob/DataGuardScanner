@@ -39,6 +39,9 @@
         导出报告
       </button>
       <button class="btn" @click="showSettings = true">设置</button>
+      <button class="btn theme-toggle" @click="toggleTheme" :title="getThemeTooltip()">
+        {{ getThemeIcon() }}
+      </button>
     </div>
 
     <!-- 主内容区 -->
@@ -122,6 +125,8 @@ import AboutModal from './components/AboutModal.vue'
 import ExportModal from './components/ExportModal.vue'
 import EnvironmentCheck from './components/EnvironmentCheck.vue'
 import { startScan, cancelScan, loadConfig, onScanProgress, onScanResult, onScanFinished, onScanError, onScanLog } from './utils/tauri-api'
+import { applyTheme, loadTheme, watchSystemTheme } from './utils/theme'
+import type { ThemeMode } from './utils/theme'
 
 const appStore = useAppStore()
 const { isScanning, scannedCount, sensitiveFilesCount, errorCount, totalSensitiveItems, config, scanResults } = storeToRefs(appStore)
@@ -133,6 +138,7 @@ const showLogs = ref(false)
 const showAbout = ref(false)
 const showExport = ref(false)
 const isSidebarCollapsed = ref(false)
+const currentTheme = ref<ThemeMode>('system')
 
 // 加载配置
 onMounted(async () => {
@@ -142,6 +148,17 @@ onMounted(async () => {
   } catch (error) {
     console.error('加载配置失败:', error)
   }
+  
+  // 初始化主题
+  currentTheme.value = loadTheme()
+  applyTheme(currentTheme.value)
+  
+  // 监听系统主题变化（仅在 system 模式下）
+  watchSystemTheme(() => {
+    if (currentTheme.value === 'system') {
+      applyTheme('system')
+    }
+  })
   
   // 监听扫描事件
   await onScanProgress((data) => {
@@ -246,6 +263,43 @@ const handlePreview = (filePath: string) => {
   showPreview.value = true
   console.log('showPreview set to true')
 }
+
+// 主题切换
+const toggleTheme = () => {
+  const themes: ThemeMode[] = ['light', 'dark', 'system']
+  const currentIndex = themes.indexOf(currentTheme.value)
+  const nextIndex = (currentIndex + 1) % themes.length
+  currentTheme.value = themes[nextIndex]
+  applyTheme(currentTheme.value)
+}
+
+// 获取主题图标
+const getThemeIcon = () => {
+  switch (currentTheme.value) {
+    case 'light':
+      return '☀️'
+    case 'dark':
+      return '🌙'
+    case 'system':
+      return '💻'
+    default:
+      return '☀️'
+  }
+}
+
+// 获取主题提示文本
+const getThemeTooltip = () => {
+  switch (currentTheme.value) {
+    case 'light':
+      return '当前：浅色主题，点击切换到深色'
+    case 'dark':
+      return '当前：深色主题，点击切换到跟随系统'
+    case 'system':
+      return '当前：跟随系统，点击切换到浅色'
+    default:
+      return '切换主题'
+  }
+}
 </script>
 
 <style scoped>
@@ -260,7 +314,7 @@ const handlePreview = (filePath: string) => {
   display: flex;
   gap: 20px;
   padding: 8px 16px;
-  background-color: #f0f0f0;
+  background-color: var(--menu-bg);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -286,14 +340,15 @@ const handlePreview = (filePath: string) => {
   display: flex;
   gap: 10px;
   padding: 10px 16px;
-  background-color: #fafafa;
+  background-color: var(--toolbar-bg);
   border-bottom: 1px solid var(--border-color);
 }
 
 .btn {
   padding: 6px 16px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
@@ -347,6 +402,12 @@ const handlePreview = (filePath: string) => {
   transform: translateY(0);
 }
 
+.theme-toggle {
+  font-size: 18px;
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+}
+
 .main-content {
   display: flex;
   flex: 1;
@@ -374,7 +435,7 @@ const handlePreview = (filePath: string) => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  background-color: white;
+  background-color: var(--sidebar-bg);
   position: absolute; /* 绝对定位，脱离文档流 */
   left: 0;
   top: 0;
@@ -397,7 +458,7 @@ const handlePreview = (filePath: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f5f5f5;
+  background-color: var(--bg-hover);
   border: 1px solid var(--border-color);
   border-left: none;
   border-radius: 0 4px 4px 0;
@@ -424,7 +485,7 @@ const handlePreview = (filePath: string) => {
   display: flex;
   gap: 30px;
   padding: 6px 16px;
-  background-color: #f0f0f0;
+  background-color: var(--menu-bg);
   border-top: 1px solid var(--border-color);
   font-size: 13px;
   color: var(--text-secondary);

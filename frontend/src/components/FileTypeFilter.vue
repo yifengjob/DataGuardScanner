@@ -138,7 +138,7 @@ const handleAllFilesCheck = (event: Event) => {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background-color: #fafafa;
+  background-color: var(--toolbar-bg);
   cursor: pointer;
   user-select: none;
 }
@@ -177,7 +177,7 @@ const handleAllFilesCheck = (event: Event) => {
 
 .format-hint {
   font-size: 11px;
-  color: #999;
+  color: var(--text-secondary);
   font-weight: normal;
   margin-left: 4px;
 }
@@ -203,7 +203,7 @@ const handleAllFilesCheck = (event: Event) => {
 
 .all-files-group {
   padding: 8px;
-  background-color: #f0f9ff;
+  background-color: var(--bg-selected);
   border-radius: 4px;
   margin-bottom: 16px;
 }

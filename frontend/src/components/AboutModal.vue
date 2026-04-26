@@ -10,7 +10,7 @@
         <div class="about-content">
           <img src="../assets/icon.svg" alt="DataGuard Scanner Logo" class="app-icon" />
           <h2 class="app-name">DataGuard Scanner - 敏感数据扫描工具</h2>
-          <p class="app-version">版本 1.0.1</p>
+          <p class="app-version">版本 1.0.2</p>
           
           <div class="app-description">
             <h4>软件介绍</h4>
@@ -82,7 +82,8 @@ defineEmits<{
 }
 
 .modal-container {
-  background-color: white;
+  background-color: var(--modal-bg);
+  color: var(--text-color);
   border-radius: 8px;
   width: min(90%, 700px);
   max-height: 85vh;
@@ -115,7 +116,7 @@ defineEmits<{
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--text-color);
 }
 
 .modal-body {
@@ -144,7 +145,7 @@ defineEmits<{
 
 .app-version {
   font-size: 14px;
-  color: #999;
+  color: var(--text-secondary);
   margin: 0 0 24px 0;
 }
 
@@ -154,7 +155,7 @@ defineEmits<{
   text-align: left;
   margin-bottom: 24px;
   padding: 16px;
-  background-color: #f9f9f9;
+  background-color: var(--bg-hover);
   border-radius: 6px;
 }
 
@@ -164,20 +165,20 @@ defineEmits<{
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 12px 0;
-  color: #333;
+  color: var(--text-color);
 }
 
 .app-description p {
   font-size: 14px;
   line-height: 1.8;
-  color: #666;
+  color: var(--text-secondary);
   margin: 8px 0;
 }
 
 .author-info p {
   font-size: 14px;
   margin: 8px 0;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .author-info a {
@@ -197,7 +198,7 @@ defineEmits<{
 
 .features li {
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
   padding: 6px 0;
   line-height: 1.6;
 }
@@ -205,12 +206,12 @@ defineEmits<{
 .copyright {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border-color);
 }
 
 .copyright p {
   font-size: 13px;
-  color: #999;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -225,7 +226,8 @@ defineEmits<{
 .btn {
   padding: 8px 24px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;

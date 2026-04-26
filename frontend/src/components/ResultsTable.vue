@@ -307,7 +307,7 @@ const handleBatchDelete = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background-color: #fafafa;
+  background-color: var(--toolbar-bg);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -346,6 +346,8 @@ const handleBatchDelete = async () => {
   border-radius: 4px;
   font-size: 13px;
   width: 200px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }
 
 .table-content {
@@ -362,7 +364,7 @@ table {
 thead {
   position: sticky;
   top: 0;
-  background-color: #f5f5f5;
+  background-color: var(--bg-hover);
   z-index: 1;
 }
 
@@ -387,12 +389,13 @@ th.checkbox-col:hover {
 }
 
 th:hover {
-  background-color: #e8e8e8;
+  background-color: var(--bg-selected);
 }
 
 td {
   padding: 8px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
 }
 
 td.checkbox-col {
@@ -443,7 +446,8 @@ tr:hover {
   padding: 3px 10px;
   margin-right: 5px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 3px;
   cursor: pointer;
   font-size: 12px;
@@ -466,7 +470,7 @@ tr:hover {
 }
 
 .btn-delete:hover {
-  background-color: #fff1f0;
+  background-color: var(--bg-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(255, 77, 79, 0.2);
 }

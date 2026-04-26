@@ -95,7 +95,8 @@ const handleClearLogs = () => {
 }
 
 .modal-container {
-  background-color: white;
+  background-color: var(--modal-bg);
+  color: var(--text-color);
   border-radius: 8px;
   width: min(700px, 90vw);
   height: min(60vh, 500px);
@@ -128,7 +129,7 @@ const handleClearLogs = () => {
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--text-color);
 }
 
 .modal-body {
@@ -151,8 +152,9 @@ const handleClearLogs = () => {
 
 .log-item {
   padding: 4px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
   word-break: break-all;
+  color: var(--text-color);
 }
 
 .log-item.error {
@@ -170,7 +172,8 @@ const handleClearLogs = () => {
 .btn {
   padding: 6px 16px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;

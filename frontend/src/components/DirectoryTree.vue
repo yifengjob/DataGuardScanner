@@ -144,7 +144,7 @@ const handleCollapseAll = () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background-color: #fafafa;
+  background-color: var(--toolbar-bg);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -162,7 +162,8 @@ const handleCollapseAll = () => {
   padding: 3px 8px;
   font-size: 12px;
   border: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-radius: 3px;
   cursor: pointer;
 }
