@@ -168,8 +168,7 @@ jobs:
               libcairo2-dev:arm64 \
               libgdk-pixbuf-2.0-dev:arm64 \
               libatk1.0-dev:arm64 \
-              libharfbuzz-dev:arm64 \
-              libgirepository1.0-dev:arm64
+              libharfbuzz-dev:arm64
           fi
 
       # Cache Rust dependencies
