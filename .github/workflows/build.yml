@@ -300,6 +300,7 @@ jobs:
             artifacts/**/*.msi
             artifacts/**/*.AppImage
             artifacts/**/*.deb
+            artifacts/**/*.rpm
             artifacts/**/*.dmg
           draft: false
           prerelease: false
