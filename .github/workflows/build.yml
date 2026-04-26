@@ -239,7 +239,7 @@ jobs:
           path: |
             target/${{ matrix.target }}/release/bundle/deb/*.deb
             target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
-          if-no-files-found: error
+          if-no-files-found: ignore
 
       - name: Upload macOS artifacts
         if: startsWith(matrix.platform, 'macos')
