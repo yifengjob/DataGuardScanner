@@ -49,14 +49,17 @@ export const useAppStore = defineStore('app', () => {
   
   // 获取节点的选择状态：'checked' | 'unchecked' | 'indeterminate'
   function getNodeCheckState(nodePath: string, allNodes: Map<string, DirectoryNode>): 'checked' | 'unchecked' | 'indeterminate' {
+    // 根据路径格式自动判断分隔符
+    const separator = nodePath.includes('\\') ? '\\' : '/'
+    
     // 查找所有直接子节点（只找一层）
     const directChildren = Array.from(allNodes.values()).filter(n => {
-      // 必须是子节点（路径以 nodePath/ 开头）
-      if (!n.path.startsWith(nodePath + '/')) return false
+      // 必须是子节点（路径以 nodePath + separator 开头）
+      if (!n.path.startsWith(nodePath + separator)) return false
       
-      // 排除更深层的子孙节点（路径中只能有一个额外的 /）
+      // 排除更深层的子孙节点（路径中只能有一个额外的 separator）
       const relativePath = n.path.substring(nodePath.length + 1)
-      return !relativePath.includes('/')
+      return !relativePath.includes(separator)
     })
     
     if (directChildren.length === 0) {
@@ -120,19 +123,29 @@ export const useAppStore = defineStore('app', () => {
   function smartToggleNode(nodePath: string, allNodes: Map<string, DirectoryNode>) {
     const currentState = getNodeCheckState(nodePath, allNodes)
     
-    // 查找所有子孙节点
-    const descendants = Array.from(allNodes.values()).filter(n => 
-      n.path.startsWith(nodePath + '/')
-    )
+    // 根据路径格式自动判断分隔符
+    const separator = nodePath.includes('\\') ? '\\' : '/'
     
     if (currentState === 'checked' || currentState === 'indeterminate') {
-      // 当前是全选或半选，取消选中自己和所有子节点
+      // ===== 取消选中：删除自己和所有子孙节点 =====
       selectedPaths.value.delete(nodePath)
-      descendants.forEach(d => selectedPaths.value.delete(d.path))
+      
+      // 删除所有子孙节点（包括已加载和通过路径推断的）
+      Array.from(selectedPaths.value).forEach(path => {
+        if (path.startsWith(nodePath + separator)) {
+          selectedPaths.value.delete(path)
+        }
+      })
     } else {
-      // 当前是未选中，选中自己和所有子节点
+      // ===== 选中：添加自己和所有已加载的子孙节点 =====
       selectedPaths.value.add(nodePath)
-      descendants.forEach(d => selectedPaths.value.add(d.path))
+      
+      // 添加所有已加载的子孙节点（用于 UI 显示）
+      Array.from(allNodes.values()).forEach(n => {
+        if (n.path.startsWith(nodePath + separator)) {
+          selectedPaths.value.add(n.path)
+        }
+      })
     }
   }
   
@@ -168,8 +181,10 @@ export const useAppStore = defineStore('app', () => {
     
     for (const path of paths) {
       // 检查这个路径是否是其他已选路径的祖先
+      // 根据路径格式自动判断分隔符
+      const separator = path.includes('\\') ? '\\' : '/'
       const hasDescendantSelected = paths.some(otherPath => 
-        otherPath !== path && otherPath.startsWith(path + '\\')
+        otherPath !== path && otherPath.startsWith(path + separator)
       )
       
       // 如果没有子孙节点被选中，则这是一个有效的扫描路径

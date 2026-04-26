@@ -48,6 +48,7 @@ pub async fn run_scan(
     event_tx.send(ScanEvent::Log("开始扫描...".to_string())).await.ok();
     event_tx.send(ScanEvent::Log(format!("扫描路径数: {}", config.selected_paths.len()))).await.ok();
     event_tx.send(ScanEvent::Log(format!("文件类型数: {}", config.selected_extensions.len()))).await.ok();
+    event_tx.send(ScanEvent::Log(format!("选中的扩展名: {:?}", config.selected_extensions))).await.ok();
     event_tx.send(ScanEvent::Log(format!("敏感检测类型: {}", config.enabled_sensitive_types.join(", ")))).await.ok();
     event_tx.send(ScanEvent::Log("---".to_string())).await.ok();
     
@@ -66,12 +67,20 @@ pub async fn run_scan(
             continue;
         }
         
+        // 检查是否是目录
+        if !path.is_dir() {
+            event_tx.send(ScanEvent::Log(format!("路径不是目录: {}", root_path))).await.ok();
+            continue;
+        }
+        
         // 遍历目录
+        log::debug!("开始遍历目录: {}", root_path);
+        
         for entry in WalkDir::new(path)
             .follow_links(false)
             .into_iter()
             .filter_entry(|e| {
-                should_ignore_directory(e, &config)
+                should_include_directory(e, &config)
             })
         {
             if cancel_flag.load(Ordering::Relaxed) {
@@ -102,11 +111,13 @@ pub async fn run_scan(
                 // 如果选中了"*"，则不过滤任何文件类型
                 if !config.selected_extensions.contains(&"*".to_string()) 
                     && !config.selected_extensions.contains(&ext_lower) {
+                    log::debug!("跳过文件（扩展名不匹配）: {} (.{})", file_path, ext_lower);
                     continue;
                 }
             } else {
                 // 没有扩展名的文件，只有在选中"*"时才扫描
                 if !config.selected_extensions.contains(&"*".to_string()) {
+                    log::debug!("跳过文件（无扩展名）: {}", file_path);
                     continue;
                 }
             }
@@ -196,22 +207,24 @@ pub async fn run_scan(
     event_tx.send(ScanEvent::Log(format!("扫描完成，共扫描 {} 个文件", scanned_count))).await.ok();
 }
 
-/// 检查是否应该忽略目录
-fn should_ignore_directory(entry: &walkdir::DirEntry, config: &ScanConfig) -> bool {
+/// 检查是否应该包含目录（返回 true 表示保留，false 表示过滤）
+fn should_include_directory(entry: &walkdir::DirEntry, config: &ScanConfig) -> bool {
     let name = entry.file_name().to_string_lossy();
     let path = entry.path().to_string_lossy();
     
     // 1. 检查全局忽略列表（精确匹配目录名，任意位置都忽略）
     if config.ignore_dir_names.contains(&name.to_string()) {
-        return true;
+        log::debug!("过滤目录（名称匹配）: {}", path);
+        return false;
     }
     
     // 2. 检查系统目录（路径前缀匹配，只在特定位置忽略）
     for system_dir in &config.system_dirs {
         if path.starts_with(system_dir) {
-            return true;
+            log::debug!("过滤目录（系统目录）: {} (匹配: {})", path, system_dir);
+            return false;
         }
     }
     
-    false
+    true
 }
