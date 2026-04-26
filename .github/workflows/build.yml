@@ -128,8 +128,13 @@ jobs:
             # Install ARM64 versions of required libraries
             sudo dpkg --add-architecture arm64
             
-            # Fix APT sources for multiarch - remove security repos that don't have arm64
-            sudo sed -i 's|http://security.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+            # Fix APT sources for multiarch - replace all security repos with archive
+            sudo sed -i 's|http://security\.ubuntu\.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+            sudo sed -i 's|https://security\.ubuntu\.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+            
+            # Verify the changes
+            echo "=== Updated sources.list ==="
+            grep -E "(security|archive)" /etc/apt/sources.list || true
             
             sudo apt-get update
             sudo apt-get install -y \
