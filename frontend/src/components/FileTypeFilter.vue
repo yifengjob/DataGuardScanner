@@ -15,7 +15,7 @@
               :checked="config.selected_extensions.includes('*')"
               @change="handleAllFilesCheck($event)"
             />
-            <strong>所有文件类型（不过滤）</strong>
+            <strong>所有支持的文件类型</strong>
           </label>
         </div>
       </div>
