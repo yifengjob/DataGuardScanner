@@ -138,6 +138,14 @@ jobs:
                 sudo sed -i '/security/d' /etc/apt/apt-mirrors.txt
             fi
             
+            # Debug: show remaining sources
+            echo "=== Remaining APT sources ==="
+            cat /etc/apt/sources.list 2>/dev/null || true
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+                echo "--- apt-mirrors.txt ---"
+                cat /etc/apt/apt-mirrors.txt
+            fi
+            
             sudo apt-get update
             sudo apt-get install -y \
               libwebkit2gtk-4.1-dev:arm64 \
