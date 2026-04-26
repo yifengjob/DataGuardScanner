@@ -127,6 +127,10 @@ jobs:
             
             # Install ARM64 versions of required libraries
             sudo dpkg --add-architecture arm64
+            
+            # Fix APT sources for multiarch - remove security repos that don't have arm64
+            sudo sed -i 's|http://security.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+            
             sudo apt-get update
             sudo apt-get install -y \
               libwebkit2gtk-4.1-dev:arm64 \
