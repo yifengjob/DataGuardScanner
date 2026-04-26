@@ -36,7 +36,7 @@ jobs:
             args: ""
           
           # macOS Intel
-          - os: macos-15
+          - os: macos-latest
             target: x86_64-apple-darwin
             platform: macos-intel
             args: ""
