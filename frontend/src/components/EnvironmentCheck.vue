@@ -106,9 +106,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
-import { exit } from '@tauri-apps/plugin-process'
+import {onMounted, ref} from 'vue'
+import {invoke} from '@tauri-apps/api/core'
+import {exit} from '@tauri-apps/plugin-process'
 
 interface EnvironmentIssue {
   severity: 'Critical' | 'Warning' | 'Info'
@@ -136,8 +136,7 @@ onMounted(async () => {
 const performCheck = async () => {
   try {
     checking.value = true
-    const result = await invoke<EnvironmentCheck>('check_system_environment')
-    environmentInfo.value = result
+    environmentInfo.value = await invoke<EnvironmentCheck>('check_system_environment')
   } catch (error) {
     console.error('环境检查失败:', error)
     environmentInfo.value = {

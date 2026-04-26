@@ -26,6 +26,7 @@ export const useAppStore = defineStore('app', () => {
       'address', 'ip_address', 'password'
     ],
     ignore_dir_names: ['node_modules', '.git', 'System Volume Information'],
+    system_dirs: [], // 会在加载配置时从后端获取
     max_file_size_mb: 50,
     max_pdf_size_mb: 100,
     scan_concurrency: 8,

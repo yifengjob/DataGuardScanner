@@ -69,7 +69,8 @@
         </div>
         
         <div class="settings-section">
-          <h4>忽略目录</h4>
+          <h4>忽略目录名（任意位置）</h4>
+          <p class="section-hint">这些名称的目录在任何位置都会被忽略，如 node_modules、.git 等</p>
           <div class="ignore-dirs">
             <div v-for="(dir, index) in config.ignore_dir_names" :key="index" class="dir-item">
               <span>{{ dir }}</span>
@@ -83,6 +84,26 @@
                 @keyup.enter="addIgnoreDir"
               />
               <button class="btn-small" @click="addIgnoreDir">添加</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h4>系统目录路径（特定位置）</h4>
+          <p class="section-hint">只有匹配这些完整路径的目录才会被忽略，如 C:\Windows、/usr 等</p>
+          <div class="ignore-dirs">
+            <div v-for="(dir, index) in config.system_dirs" :key="index" class="dir-item">
+              <span>{{ dir }}</span>
+              <button class="btn-remove" @click="removeSystemDir(index)">×</button>
+            </div>
+            <div class="add-dir">
+              <input 
+                type="text" 
+                v-model="newSystemDir"
+                placeholder="输入完整路径"
+                @keyup.enter="addSystemDir"
+              />
+              <button class="btn-small" @click="addSystemDir">添加</button>
             </div>
           </div>
         </div>
@@ -110,6 +131,7 @@ const appStore = useAppStore()
 const { config } = storeToRefs(appStore)
 
 const newIgnoreDir = ref('')
+const newSystemDir = ref('')
 const sensitiveTypes = ref<Array<{id: string, name: string}>>([])
 
 onMounted(async () => {
@@ -144,6 +166,17 @@ const addIgnoreDir = () => {
 
 const removeIgnoreDir = (index: number) => {
   config.value.ignore_dir_names.splice(index, 1)
+}
+
+const addSystemDir = () => {
+  if (newSystemDir.value.trim()) {
+    config.value.system_dirs.push(newSystemDir.value.trim())
+    newSystemDir.value = ''
+  }
+}
+
+const removeSystemDir = (index: number) => {
+  config.value.system_dirs.splice(index, 1)
 }
 
 const handleSave = async () => {
@@ -224,6 +257,13 @@ const handleSave = async () => {
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
+}
+
+.section-hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: -8px;
+  margin-bottom: 12px;
 }
 
 .setting-item {

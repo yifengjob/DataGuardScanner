@@ -11,7 +11,8 @@ export interface ScanConfig {
   selected_paths: string[]
   selected_extensions: string[]
   enabled_sensitive_types: string[]
-  ignore_dir_names: string[]
+  ignore_dir_names: string[]           // 忽略目录名（任意位置）
+  system_dirs: string[]                // 系统目录完整路径
   max_file_size_mb: number
   max_pdf_size_mb: number
   scan_concurrency: number
@@ -42,7 +43,8 @@ export interface AppConfig {
   selected_paths: string[]
   selected_extensions: string[]
   enabled_sensitive_types: string[]
-  ignore_dir_names: string[]
+  ignore_dir_names: string[]           // 忽略目录名（任意位置）
+  system_dirs: string[]                // 系统目录完整路径
   max_file_size_mb: number
   max_pdf_size_mb: number
   scan_concurrency: number

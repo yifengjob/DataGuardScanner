@@ -461,8 +461,13 @@ pub fn load_config() -> Result<AppConfig, String> {
     let content = std::fs::read_to_string(&config_path)
         .map_err(|e| format!("读取配置失败: {}", e))?;
     
-    let config: AppConfig = serde_json::from_str(&content)
+    let mut config: AppConfig = serde_json::from_str(&content)
         .map_err(|e| format!("解析配置失败: {}", e))?;
+    
+    // 配置迁移：如果 system_dirs 为空，使用默认值
+    if config.system_dirs.is_empty() {
+        config.system_dirs = AppConfig::default().system_dirs;
+    }
     
     Ok(config)
 }

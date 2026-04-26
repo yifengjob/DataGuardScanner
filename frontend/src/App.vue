@@ -201,6 +201,7 @@ const handleStartScan = async () => {
     selected_extensions: config.value.selected_extensions,
     enabled_sensitive_types: config.value.enabled_sensitive_types,
     ignore_dir_names: config.value.ignore_dir_names,
+    system_dirs: config.value.system_dirs || [],
     max_file_size_mb: config.value.max_file_size_mb,
     max_pdf_size_mb: config.value.max_pdf_size_mb,
     scan_concurrency: config.value.scan_concurrency,

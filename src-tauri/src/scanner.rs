@@ -71,12 +71,7 @@ pub async fn run_scan(
             .follow_links(false)
             .into_iter()
             .filter_entry(|e| {
-                // 检查是否应该忽略此目录
-                if let Some(name) = e.file_name().to_str() {
-                    !config.ignore_dir_names.contains(&name.to_string())
-                } else {
-                    true
-                }
+                should_ignore_directory(e, &config)
             })
         {
             if cancel_flag.load(Ordering::Relaxed) {
@@ -199,4 +194,24 @@ pub async fn run_scan(
     
     event_tx.send(ScanEvent::Finished).await.ok();
     event_tx.send(ScanEvent::Log(format!("扫描完成，共扫描 {} 个文件", scanned_count))).await.ok();
+}
+
+/// 检查是否应该忽略目录
+fn should_ignore_directory(entry: &walkdir::DirEntry, config: &ScanConfig) -> bool {
+    let name = entry.file_name().to_string_lossy();
+    let path = entry.path().to_string_lossy();
+    
+    // 1. 检查全局忽略列表（精确匹配目录名，任意位置都忽略）
+    if config.ignore_dir_names.contains(&name.to_string()) {
+        return true;
+    }
+    
+    // 2. 检查系统目录（路径前缀匹配，只在特定位置忽略）
+    for system_dir in &config.system_dirs {
+        if path.starts_with(system_dir) {
+            return true;
+        }
+    }
+    
+    false
 }
