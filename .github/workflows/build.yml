@@ -29,6 +29,12 @@ jobs:
             platform: linux-x64
             args: ""
           
+          # Linux ARM64 (aarch64)
+          - os: ubuntu-22.04
+            target: aarch64-unknown-linux-gnu
+            platform: linux-arm64
+            args: ""
+          
           # macOS Intel
           - os: macos-15
             target: x86_64-apple-darwin
@@ -70,6 +76,13 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       
+      # Setup QEMU for ARM builds
+      - name: Setup QEMU for ARM
+        if: matrix.platform == 'linux-arm64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      
       # Install Tauri CLI for portable build
       - name: Install Tauri CLI
         if: startsWith(matrix.platform, 'windows')
@@ -77,7 +90,7 @@ jobs:
 
       # Install Linux dependencies
       - name: Install Linux dependencies
-        if: matrix.platform == 'linux-x64'
+        if: startsWith(matrix.platform, 'linux')
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -88,6 +101,14 @@ jobs:
             file \
             desktop-file-utils \
             libfuse2
+          
+          # Install cross-compilation tools for ARM64
+          if [ "${{ matrix.platform }}" = "linux-arm64" ]; then
+            sudo apt-get install -y \
+              gcc-aarch64-linux-gnu \
+              g++-aarch64-linux-gnu \
+              libc6-dev-arm64-cross
+          fi
 
       # Cache Rust dependencies
       - name: Cache Rust dependencies
@@ -150,7 +171,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Linux artifacts
-        if: matrix.platform == 'linux-x64'
+        if: startsWith(matrix.platform, 'linux')
         uses: actions/upload-artifact@v4
         with:
           name: dataguard-scanner-${{ matrix.platform }}
@@ -217,6 +238,7 @@ jobs:
             artifacts/**/*.exe
             artifacts/**/*.msi
             artifacts/**/*.AppImage
+            artifacts/**/*.deb
             artifacts/**/*.dmg
           draft: false
           prerelease: false
