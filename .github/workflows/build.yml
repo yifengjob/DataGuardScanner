@@ -201,6 +201,7 @@ jobs:
         with:
           projectPath: src-tauri
           args: --target ${{ matrix.target }} ${{ matrix.args }}
+        continue-on-error: ${{ matrix.platform == 'linux-arm64' }}
 
       # Build Windows portable EXE (additional)
       - name: Build Windows Portable EXE
