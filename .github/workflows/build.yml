@@ -128,10 +128,10 @@ jobs:
             # Configure APT for multiarch properly
             sudo dpkg --add-architecture arm64
             
-            # Create proper sources list with arch specification
-            echo 'deb [arch=amd64,arm64] https://azure.archive.ubuntu.com/ubuntu jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
-            echo 'deb [arch=amd64,arm64] https://azure.archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
-            echo 'deb [arch=amd64,arm64] https://azure.archive.ubuntu.com/ubuntu jammy-backports main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            # Create proper sources list with arch specification using standard Ubuntu mirrors
+            echo 'deb [arch=amd64,arm64] http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=amd64,arm64] http://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=amd64,arm64] http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
             
             # Remove or disable original sources to avoid conflicts
             sudo mv /etc/apt/sources.list /etc/apt/sources.list.bak 2>/dev/null || true
