@@ -28,6 +28,11 @@ export async function previewFile(path: string, maxBytes?: number): Promise<Prev
   return await invoke('preview_file', { path, maxBytes })
 }
 
+// 取消预览任务
+export async function cancelPreview(): Promise<boolean> {
+  return await invoke('cancel_preview')
+}
+
 // 打开文件
 export async function openFile(path: string): Promise<void> {
   return await invoke('open_file', { path })

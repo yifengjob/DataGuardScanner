@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { previewFile, openFile } from '../utils/tauri-api'
+import { previewFile, openFile, cancelPreview } from '../utils/tauri-api'
 import { highlightText } from '../utils/format'
 
 const props = defineProps<{
@@ -48,6 +48,7 @@ const loading = ref(false)
 const error = ref('')
 const content = ref('')
 const highlights = ref<Array<{start: number, end: number, type_id: string, type_name: string}>>([])
+const currentTaskId = ref<number | null>(null)  // 当前任务 ID
 
 const highlightedContent = computed(() => {
   if (!content.value) return ''
@@ -55,7 +56,7 @@ const highlightedContent = computed(() => {
 })
 
 // 监听 visible 和 filePath 的组合变化
-watch([() => props.visible, () => props.filePath], ([isVisible, newPath]) => {
+watch([() => props.visible, () => props.filePath], async ([isVisible, newPath]) => {
   console.log('PreviewModal watch triggered:', { isVisible, newPath: newPath?.substring(0, 50), timestamp: Date.now() })
   
   if (isVisible && newPath) {
@@ -72,8 +73,21 @@ watch([() => props.visible, () => props.filePath], ([isVisible, newPath]) => {
       loadFile(newPath)
     })
   } else if (!isVisible) {
-    // 窗口关闭时，清空状态
-    console.log('Modal closed, clearing state')
+    // 窗口关闭时，取消当前任务并清空状态
+    console.log('Modal closed, canceling task and clearing state')
+    
+    // 取消正在进行的预览任务
+    if (currentTaskId.value !== null) {
+      console.log('Canceling preview task')
+      try {
+        await cancelPreview()
+      } catch (err) {
+        console.error('Failed to cancel preview:', err)
+      }
+      currentTaskId.value = null
+    }
+    
+    // 清空状态
     loading.value = false
     error.value = ''
     content.value = ''
@@ -82,14 +96,36 @@ watch([() => props.visible, () => props.filePath], ([isVisible, newPath]) => {
 }, { immediate: true })
 
 async function loadFile(filePath: string) {
+  const taskId = Date.now()  // 使用时间戳作为任务标识
+  currentTaskId.value = taskId
+  
+  console.log('Loading file with task ID:', taskId)
+  
   try {
     const result = await previewFile(filePath)
+    
+    // 检查是否在加载过程中被取消（通过比较 task_id）
+    if (currentTaskId.value !== taskId) {
+      console.log('Preview was canceled, ignoring result')
+      return
+    }
+    
     content.value = result.content
     highlights.value = result.highlights
   } catch (err) {
+    // 如果是取消错误，不显示错误信息
+    if (String(err).includes('已取消')) {
+      console.log('Preview canceled by user')
+      return
+    }
     error.value = `预览失败: ${err}`
   } finally {
+    // 总是清除 loading 状态（无论是否被取消）
+    // 但只在当前任务是最新任务时才清除 currentTaskId
     loading.value = false
+    if (currentTaskId.value === taskId) {
+      currentTaskId.value = null
+    }
   }
 }
 

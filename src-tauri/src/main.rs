@@ -88,6 +88,7 @@ fn main() {
             scan_start,
             scan_cancel,
             preview_file,
+            cancel_preview,
             open_file,
             delete_file,
             export_report,

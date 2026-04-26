@@ -3,11 +3,17 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{State, AppHandle, Emitter};
 use tokio::sync::mpsc;
+use lazy_static::lazy_static;
 
 use crate::models::*;
 use crate::scanner::{run_scan_safe, ScanEvent};
 use crate::file_parser::extract_text_from_file;
 use crate::sensitive_detector::{get_highlights, get_builtin_rules};
+
+lazy_static! {
+    /// 预览任务取消标志（只保留最新的）
+    static ref LATEST_PREVIEW_CANCEL_FLAG: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
+}
 
 /// 扫描状态
 pub struct ScanState {
@@ -183,19 +189,52 @@ pub fn scan_cancel(state: State<'_, ScanState>) -> Result<bool, String> {
     Ok(true)
 }
 
+/// 取消预览任务
+#[tauri::command]
+pub fn cancel_preview() -> Result<bool, String> {
+    if let Some(flag) = LATEST_PREVIEW_CANCEL_FLAG.lock().unwrap().as_ref() {
+        flag.store(true, Ordering::Relaxed);
+        log::debug!("已请求取消预览任务");
+        Ok(true)
+    } else {
+        log::warn!("没有正在进行的预览任务");
+        Ok(false)
+    }
+}
+
 /// 预览文件
 #[tauri::command]
 pub async fn preview_file(path: String, max_bytes: Option<usize>) -> Result<PreviewResult, String> {
     let max_bytes = max_bytes.unwrap_or(200 * 1024); // 默认 200KB
     
+    log::debug!("开始预览任务");
+    
+    // 创建取消标志，并设置为最新的预览任务
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+    {
+        let mut latest_flag = LATEST_PREVIEW_CANCEL_FLAG.lock().unwrap();
+        *latest_flag = Some(cancel_flag.clone());
+    }
+    
     // 在后台线程中执行文件读取，避免阻塞主线程
     let path_clone = path.clone();
+    let cancel_flag_clone = cancel_flag.clone();
     let result = tokio::task::spawn_blocking(move || {
+        // 检查是否被取消
+        if cancel_flag_clone.load(Ordering::Relaxed) {
+            return Err("任务已取消".to_string());
+        }
         extract_text_from_file(&path_clone)
     })
     .await
     .map_err(|e| format!("任务执行失败: {}", e))?
     .map_err(|e| format!("文件读取失败: {}", e))?;
+    
+    // 再次检查是否被取消
+    if cancel_flag.load(Ordering::Relaxed) {
+        log::debug!("预览任务已取消（文件读取后）");
+        return Err("任务已取消".to_string());
+    }
     
     let (text, unsupported_preview) = result;
     
@@ -218,6 +257,12 @@ pub async fn preview_file(path: String, max_bytes: Option<usize>) -> Result<Prev
         &text
     };
     
+    // 再次检查是否被取消（高亮计算前）
+    if cancel_flag.load(Ordering::Relaxed) {
+        log::debug!("预览任务已取消（高亮计算前）");
+        return Err("任务已取消".to_string());
+    }
+    
     // 获取敏感规则（默认全部启用用于高亮）
     let rules = get_builtin_rules();
     let enabled_types: Vec<String> = rules.iter()
@@ -235,6 +280,8 @@ pub async fn preview_file(path: String, max_bytes: Option<usize>) -> Result<Prev
             type_name,
         })
         .collect();
+    
+    log::debug!("预览任务完成");
     
     Ok(PreviewResult {
         content: truncated.to_string(),
