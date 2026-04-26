@@ -9,8 +9,8 @@
       <div class="modal-body">
         <div class="about-content">
           <img src="../assets/icon.svg" alt="DataGuard Scanner Logo" class="app-icon" />
-          <h2 class="app-name">DataGuard Scanner</h2>
-          <p class="app-version">版本 1.0.0</p>
+          <h2 class="app-name">DataGuard Scanner - 敏感数据扫描工具</h2>
+          <p class="app-version">版本 1.0.1</p>
           
           <div class="app-description">
             <h4>软件介绍</h4>
@@ -23,7 +23,7 @@
               提供实时扫描进度显示、敏感内容高亮预览、文件操作和报告导出等功能。
             </p>
             <p>
-              软件采用便携设计，无需安装即可使用，支持 Windows、macOS 和 Linux 平台。
+              软件采用便携设计，无需安装即可使用（同时提供安装版），支持 Windows、macOS 和 Linux 平台。
             </p>
           </div>
           

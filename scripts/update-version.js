@@ -42,6 +42,11 @@ const filesToUpdate = [
     path: path.join(__dirname, '..', 'src-tauri', 'Cargo.toml'),
     name: 'Rust Cargo.toml',
     isToml: true
+  },
+  {
+    path: path.join(__dirname, '..', 'frontend', 'src', 'components', 'AboutModal.vue'),
+    name: '关于页面 AboutModal.vue',
+    isVue: true
   }
 ];
 
@@ -58,6 +63,12 @@ filesToUpdate.forEach(file => {
       newContent = content.replace(
         /^version\s*=\s*".*?"/m,
         `version = "${newVersion}"`
+      );
+    } else if (file.isVue) {
+      // 处理 Vue 文件中的版本号
+      newContent = content.replace(
+        /版本 \d+\.\d+\.\d+/g,
+        `版本 ${newVersion}`
       );
     } else {
       // 处理 JSON 文件
