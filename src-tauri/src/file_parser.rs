@@ -247,14 +247,14 @@ pub fn extract_text_from_file(path: &str) -> Result<(String, bool), String> {
     let text = match ext.as_str() {
         "txt" | "log" | "md" | "ini" | "conf" | "cfg" | "env" |
         "js" | "ts" | "py" | "java" | "c" | "cpp" | "go" | "rs" |
-        "php" | "rb" | "swift" |
+        "php" | "rb" | "swift" | "html" | "sh" | "cmd" | "bat" |
         "csv" | "json" | "xml" | "yaml" | "yml" | "properties" | "toml" => {
             read_text_file(path)?
         }
         "pdf" => {
             read_pdf_file(path)?
         }
-        "xlsx" | "xls" | "docx" | "pptx" | "doc" | "ppt" | "wps" | "et" => {
+        "xlsx" | "xls" | "docx" | "pptx" | "doc" | "ppt" | "wps" | "et" | "dps" => {
             read_office_file(path, &ext)?
         }
         _ => {
