@@ -132,10 +132,15 @@ jobs:
             sudo mv /etc/apt/sources.list /etc/apt/sources.list.bak 2>/dev/null || true
             sudo rm -f /etc/apt/sources.list.d/*.list 2>/dev/null || true
             
-            # Recreate the arm64-sources.list after deletion with standard Ubuntu mirrors
-            echo 'deb [arch=amd64,arm64] http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
-            echo 'deb [arch=amd64,arm64] http://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
-            echo 'deb [arch=amd64,arm64] http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            # Create sources list for both amd64 (native) and arm64 (cross-compile)
+            # amd64 uses archive.ubuntu.com, arm64 uses ports.ubuntu.com
+            echo 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/amd64-sources.list > /dev/null
+            echo 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/amd64-sources.list > /dev/null
+            echo 'deb [arch=amd64] http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/amd64-sources.list > /dev/null
+            
+            echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
             
             # Handle mirror configuration
             if [ -f /etc/apt/apt-mirrors.txt ]; then
