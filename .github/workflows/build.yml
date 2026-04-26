@@ -69,6 +69,11 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+      
+      # Install Tauri CLI for portable build
+      - name: Install Tauri CLI
+        if: startsWith(matrix.platform, 'windows')
+        run: cargo install tauri-cli --version "^2.0.0"
 
       # Install Linux dependencies
       - name: Install Linux dependencies
@@ -119,12 +124,9 @@ jobs:
       - name: Build Windows Portable EXE
         if: startsWith(matrix.platform, 'windows')
         run: |
-          # First build frontend from workspace root
-          pnpm --filter dataguard-scanner-frontend build
-          
-          # Then build Rust backend
           cd src-tauri
-          cargo build --release --target ${{ matrix.target }}
+          # Use cargo tauri build to ensure frontend resources are embedded
+          cargo tauri build --target ${{ matrix.target }} --bundles none
           
       # Debug: List build outputs
       - name: List build outputs
