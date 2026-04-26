@@ -125,8 +125,8 @@ jobs:
         if: startsWith(matrix.platform, 'windows')
         run: |
           cd src-tauri
-          # Use cargo tauri build to ensure frontend resources are embedded
-          cargo tauri build --target ${{ matrix.target }} --bundles none
+          # Use cargo tauri build with --no-bundle to skip packaging and only generate EXE
+          cargo tauri build --target ${{ matrix.target }} --no-bundle
           
       # Debug: List build outputs
       - name: List build outputs
