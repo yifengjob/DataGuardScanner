@@ -123,8 +123,8 @@ fn validate_person_id(id: &str) -> bool {
     
     // 前17位必须是数字，最后一位可以是数字或X/x
     let bytes = id.as_bytes();
-    for i in 0..17 {
-        if !bytes[i].is_ascii_digit() {
+    for &byte in bytes.iter().take(17) {
+        if !byte.is_ascii_digit() {
             return false;
         }
     }
@@ -157,7 +157,7 @@ fn validate_person_id(id: &str) -> bool {
     }
     
     // 校验月份：1-12
-    if month < 1 || month > 12 {
+    if !(1..=12).contains(&month) {
         return false;
     }
     
@@ -179,8 +179,8 @@ fn validate_person_id(id: &str) -> bool {
     let check_codes = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
     
     let mut sum = 0;
-    for i in 0..17 {
-        let digit = bytes[i] - b'0';
+    for (i, &byte) in bytes.iter().take(17).enumerate() {
+        let digit = byte - b'0';
         sum += (digit as u32) * weights[i];
     }
     
@@ -211,11 +211,11 @@ pub fn detect_sensitive_data(text: &str, enabled_types: &[String]) -> HashMap<St
                     
                     // 检查前面是否有数字
                     let prev_is_digit = start > 0 && text[..start].chars().last()
-                        .map_or(false, |c| c.is_ascii_digit());
+                        .is_some_and(|c| c.is_ascii_digit());
                     
                     // 检查后面是否有数字
                     let next_is_digit = end < text.len() && text[end..].chars().next()
-                        .map_or(false, |c| c.is_ascii_digit());
+                        .is_some_and(|c| c.is_ascii_digit());
                     
                     // 如果前后都不是数字，才是有效匹配
                     if prev_is_digit || next_is_digit {
@@ -263,11 +263,11 @@ pub fn get_highlights(text: &str, enabled_types: &[String]) -> Vec<(usize, usize
                     
                     // 检查前面是否有数字
                     let prev_is_digit = start > 0 && text[..start].chars().last()
-                        .map_or(false, |c| c.is_ascii_digit());
+                        .is_some_and(|c| c.is_ascii_digit());
                     
                     // 检查后面是否有数字
                     let next_is_digit = end < text.len() && text[end..].chars().next()
-                        .map_or(false, |c| c.is_ascii_digit());
+                        .is_some_and(|c| c.is_ascii_digit());
                     
                     // 如果前后有数字，跳过
                     if prev_is_digit || next_is_digit {
@@ -305,6 +305,7 @@ pub fn get_highlights(text: &str, enabled_types: &[String]) -> Vec<(usize, usize
 }
 
 #[cfg(test)]
+#[allow(clippy::useless_vec)]
 mod tests {
     use super::*;
     
@@ -385,8 +386,8 @@ mod tests {
         ];
         
         for addr in valid_addresses_with_province {
-            let counts = detect_sensitive_data(addr, &vec!["address".to_string()]);
-            assert!(counts.get("address").is_some() && counts["address"] > 0, 
+            let counts = detect_sensitive_data(addr, &["address".to_string()]);
+            assert!(counts.contains_key("address") && counts["address"] > 0, 
                 "应该匹配地址: {}", addr);
         }
         
@@ -399,8 +400,8 @@ mod tests {
         ];
         
         for addr in valid_addresses_without_province {
-            let counts = detect_sensitive_data(addr, &vec!["address".to_string()]);
-            assert!(counts.get("address").is_some() && counts["address"] > 0, 
+            let counts = detect_sensitive_data(addr, &["address".to_string()]);
+            assert!(counts.contains_key("address") && counts["address"] > 0, 
                 "应该匹配地址（无省）: {}", addr);
         }
         
@@ -417,8 +418,8 @@ mod tests {
         ];
         
         for addr in invalid_addresses {
-            let counts = detect_sensitive_data(addr, &vec!["address".to_string()]);
-            assert!(counts.get("address").is_none() || counts["address"] == 0,
+            let counts = detect_sensitive_data(addr, &["address".to_string()]);
+            assert!(!counts.contains_key("address") || counts["address"] == 0,
                 "不应该匹配地址: {}", addr);
         }
     }

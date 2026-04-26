@@ -63,7 +63,7 @@ fn get_os_version() -> String {
         "windows" => {
             // 尝试获取 Windows 版本
             if let Ok(version) = Command::new("cmd")
-                .args(&["/c", "ver"])
+                .args(["/c", "ver"])
                 .output()
             {
                 String::from_utf8_lossy(&version.stdout).trim().to_string()
@@ -182,14 +182,14 @@ fn check_linux_environment(issues: &mut Vec<EnvironmentIssue>) {
 fn is_windows_7_or_older() -> bool {
     // 使用 cmd 检查 Windows 版本
     if let Ok(output) = Command::new("cmd")
-        .args(&["/c", "ver"])
+        .args(["/c", "ver"])
         .output()
     {
         let version_output = String::from_utf8_lossy(&output.stdout);
         
         // 解析版本号，例如: "Microsoft Windows [版本 6.1.7601]"
-        if let Some(start) = version_output.find('[') {
-            if let Some(end) = version_output[start..].find(']') {
+        if let Some(start) = version_output.find('[')
+            && let Some(end) = version_output[start..].find(']') {
                 let version_str = &version_output[start + 1..start + end];
                 let version_str = version_str.replace("版本 ", "").trim().to_string();
                 let parts: Vec<&str> = version_str.split('.').collect();
@@ -200,10 +200,9 @@ fn is_windows_7_or_older() -> bool {
                 ) {
                     // Windows 7 = 6.1, Windows 8 = 6.2, Windows 8.1 = 6.3, Windows 10/11 = 10.0
                     // 返回 true 表示是 Windows 7/8/8.1（需要检查 WebView2）
-                    return major == 6 && minor >= 1 && minor <= 3;
+                    return major == 6 && (1..=3).contains(&minor);
                 }
             }
-        }
     }
     
     false
@@ -213,21 +212,20 @@ fn is_windows_7_or_older() -> bool {
 fn is_webview2_installed() -> bool {
     // 使用 reg 命令检查注册表
     let reg_check = Command::new("reg")
-        .args(&[
+        .args([
             "query",
             r"HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
         ])
         .output();
     
-    if let Ok(output) = reg_check {
-        if output.status.success() {
-            return true;
-        }
+    if let Ok(output) = reg_check
+        && output.status.success() {
+        return true;
     }
     
     // 检查当前用户的注册表
     let reg_check2 = Command::new("reg")
-        .args(&[
+        .args([
             "query",
             r"HKCU\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
         ])
@@ -252,12 +250,10 @@ fn is_vc_redist_installed() -> bool {
     
     for version in versions {
         if let Ok(output) = Command::new("reg")
-            .args(&["query", version])
+            .args(["query", version])
             .output()
-        {
-            if output.status.success() {
-                return true;
-            }
+            && output.status.success() {
+            return true;
         }
     }
     
@@ -268,14 +264,14 @@ fn is_vc_redist_installed() -> bool {
 fn is_library_installed(lib_name: &str) -> bool {
     // 使用 dpkg (Debian/Ubuntu) 或 rpm (RedHat/CentOS) 检查
     if let Ok(_output) = Command::new("dpkg")
-        .args(&["-l", lib_name])
+        .args(["-l", lib_name])
         .output()
     {
         return true;
     }
     
     if let Ok(_output) = Command::new("rpm")
-        .args(&["-q", lib_name])
+        .args(["-q", lib_name])
         .output()
     {
         return true;

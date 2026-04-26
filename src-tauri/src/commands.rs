@@ -50,7 +50,7 @@ pub fn get_directory_tree(path: String, show_hidden: bool) -> Result<Vec<Directo
             }
             
             // 检查是否有子目录（用于懒加载）
-            let has_children = is_dir && entry.path().read_dir().map_or(false, |mut rd| rd.next().is_some());
+            let has_children = is_dir && entry.path().read_dir().is_ok_and(|mut rd| rd.next().is_some());
             
             nodes.push(DirectoryNode {
                 path: file_path,
@@ -488,12 +488,11 @@ fn get_config_path() -> Result<String, String> {
         std::fs::create_dir_all(&config_dir).ok();
     }
     
-    if !config_dir.is_dir() || !is_writable(&config_dir) {
-        if let Some(user_data_dir) = dirs::data_dir() {
-            let fallback_dir = user_data_dir.join("DataGuard");
-            std::fs::create_dir_all(&fallback_dir).ok();
-            return Ok(fallback_dir.join("config.json").to_string_lossy().to_string());
-        }
+    if (!config_dir.is_dir() || !is_writable(&config_dir))
+        && let Some(user_data_dir) = dirs::data_dir() {
+        let fallback_dir = user_data_dir.join("DataGuard");
+        std::fs::create_dir_all(&fallback_dir).ok();
+        return Ok(fallback_dir.join("config.json").to_string_lossy().to_string());
     }
     
     Ok(config_dir.join("config.json").to_string_lossy().to_string())

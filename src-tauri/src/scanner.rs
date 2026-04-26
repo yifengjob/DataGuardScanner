@@ -158,9 +158,9 @@ pub async fn run_scan(
                             .metadata()
                             .ok()
                             .and_then(|m| m.modified().ok())
-                            .and_then(|t: std::time::SystemTime| {
+                            .map(|t: std::time::SystemTime| {
                                 let datetime: chrono::DateTime<chrono::Local> = t.into();
-                                Some(datetime.format("%Y-%m-%d %H:%M:%S").to_string())
+                                datetime.format("%Y-%m-%d %H:%M:%S").to_string()
                             })
                             .unwrap_or_else(|| "未知".to_string());
                         

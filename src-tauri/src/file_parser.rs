@@ -180,7 +180,7 @@ fn extract_text_from_binary(data: &[u8]) -> String {
     
     for &byte in data {
         // 检查是否是可打印字符（ASCII 32-126 或常见中文字符范围）
-        if (byte >= 32 && byte <= 126) || byte == b'\n' || byte == b'\r' || byte == b'\t' {
+        if (32..=126).contains(&byte) || byte == b'\n' || byte == b'\r' || byte == b'\t' {
             current_text.push(byte as char);
         } else {
             // 非可打印字符，检查累积的文本是否足够长
