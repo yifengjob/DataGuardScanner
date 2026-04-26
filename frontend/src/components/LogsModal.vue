@@ -6,7 +6,7 @@
         <button class="close-btn" @click="$emit('close')">×</button>
       </div>
       
-      <div class="modal-body">
+      <div class="modal-body" ref="logsContainer">
         <div v-if="logs.length === 0" class="empty-logs">
           <p>暂无日志信息</p>
         </div>
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref, watch, nextTick } from 'vue'
 import { useAppStore } from '../stores/app'
 import { storeToRefs } from 'pinia'
 import { getLogs } from '../utils/tauri-api'
@@ -39,9 +39,27 @@ import { getLogs } from '../utils/tauri-api'
 const appStore = useAppStore()
 const { logs } = storeToRefs(appStore)
 
+const logsContainer = ref<HTMLDivElement | null>(null)
+
 defineEmits<{
   close: []
 }>()
+
+// 滚动到底部
+const scrollToBottom = async () => {
+  await nextTick()
+  if (logsContainer.value) {
+    logsContainer.value.scrollTop = logsContainer.value.scrollHeight
+  }
+}
+
+// 监听日志变化，自动滚动到底部
+watch(
+  () => logs.value.length,
+  () => {
+    scrollToBottom()
+  }
+)
 
 // 组件挂载时从后端获取日志
 onMounted(async () => {
@@ -49,6 +67,8 @@ onMounted(async () => {
     const backendLogs = await getLogs()
     if (backendLogs.length > 0) {
       logs.value = backendLogs
+      // 初始加载后滚动到底部
+      await scrollToBottom()
     }
   } catch (error) {
     console.error('获取日志失败:', error)
