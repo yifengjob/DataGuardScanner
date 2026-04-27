@@ -320,22 +320,22 @@ const getThemeTooltip = () => {
 
 .menu-bar {
   display: flex;
-  gap: 20px;
-  padding: 8px 16px;
+  gap: 1.25em;                   /* 20px */
+  padding: 0.5em 1em;            /* 8px 16px */
   background-color: var(--menu-bg);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 0.0625em solid var(--border-color);  /* 1px */
 }
 
 .menu-item {
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 0.25em 0.5em;         /* 4px 8px */
+  border-radius: 0.25em;         /* 4px */
   transition: all 0.15s ease;
 }
 
 .menu-item:hover {
   background-color: var(--bg-hover);
-  transform: translateY(-1px);
+  transform: translateY(-0.0625em);  /* -1px */
 }
 
 .menu-item.disabled {
@@ -346,35 +346,35 @@ const getThemeTooltip = () => {
 
 .toolbar {
   display: flex;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 0.625em;                  /* 10px */
+  padding: 0.625em 1em;          /* 10px 16px */
   background-color: var(--toolbar-bg);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 0.0625em solid var(--border-color);  /* 1px */
 }
 
 .btn {
-  padding: 6px 16px;
-  border: 1px solid var(--border-color);
+  padding: 0.375em 1em;          /* 6px 16px */
+  border: 0.0625em solid var(--border-color);  /* 1px */
   background-color: var(--bg-color);
   color: var(--text-color);
-  border-radius: 4px;
+  border-radius: 0.25em;         /* 4px */
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875em;            /* 14px */
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375em;                  /* 6px */
 }
 
 .btn-icon {
-  width: 18px;
-  height: 18px;
+  width: 1.125em;                /* 18px */
+  height: 1.125em;               /* 18px */
   flex-shrink: 0;
-  color: currentColor; /* 确保继承父元素颜色 */
+  color: currentColor;
 }
 
 .btn-icon-only {
-  padding: 6px 10px;
+  padding: 0.375em 0.625em;      /* 6px 10px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -382,8 +382,8 @@ const getThemeTooltip = () => {
 
 .btn:hover:not(:disabled) {
   background-color: var(--bg-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-0.0625em);  /* -1px */
+  box-shadow: 0 0.125em 0.25em rgba(0, 0, 0, 0.1);  /* 0 2px 4px */
 }
 
 .btn:active:not(:disabled) {
@@ -402,13 +402,13 @@ const getThemeTooltip = () => {
 }
 
 .btn-primary .btn-icon {
-  filter: brightness(0) invert(1); /* 确保图标为白色 */
+  filter: brightness(0) invert(1);
 }
 
 .btn-primary:hover:not(:disabled) {
   background-color: #40a9ff;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+  transform: translateY(-0.0625em);  /* -1px */
+  box-shadow: 0 0.125em 0.5em rgba(24, 144, 255, 0.3);  /* 0 2px 8px */
 }
 
 .btn-primary:active:not(:disabled) {
@@ -422,13 +422,13 @@ const getThemeTooltip = () => {
 }
 
 .btn-danger .btn-icon {
-  filter: brightness(0) invert(1); /* 确保图标为白色 */
+  filter: brightness(0) invert(1);
 }
 
 .btn-danger:hover:not(:disabled) {
   background-color: #ff7875;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+  transform: translateY(-0.0625em);  /* -1px */
+  box-shadow: 0 0.125em 0.5em rgba(255, 77, 79, 0.3);  /* 0 2px 8px */
 }
 
 .btn-danger:active:not(:disabled) {
