@@ -320,22 +320,22 @@ const getThemeTooltip = () => {
 
 .menu-bar {
   display: flex;
-  gap: 1.25em;                   /* 20px */
-  padding: 0.5em 1em;            /* 8px 16px */
+  gap: var(--spacing-xl);
+  padding: var(--spacing-sm) var(--spacing-lg);
   background-color: var(--menu-bg);
-  border-bottom: 0.0625em solid var(--border-color);  /* 1px */
+  border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .menu-item {
   cursor: pointer;
-  padding: 0.25em 0.5em;         /* 4px 8px */
-  border-radius: 0.25em;         /* 4px */
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
   transition: all 0.15s ease;
 }
 
 .menu-item:hover {
   background-color: var(--bg-hover);
-  transform: translateY(-0.0625em);  /* -1px */
+  transform: translateY(calc(-1 * var(--border-width)));
 }
 
 .menu-item.disabled {
@@ -346,35 +346,35 @@ const getThemeTooltip = () => {
 
 .toolbar {
   display: flex;
-  gap: 0.625em;                  /* 10px */
-  padding: 0.625em 1em;          /* 10px 16px */
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
   background-color: var(--toolbar-bg);
-  border-bottom: 0.0625em solid var(--border-color);  /* 1px */
+  border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .btn {
-  padding: 0.375em 1em;          /* 6px 16px */
-  border: 0.0625em solid var(--border-color);  /* 1px */
+  padding: var(--btn-padding) var(--spacing-lg);
+  border: var(--border-width) solid var(--border-color);
   background-color: var(--bg-color);
   color: var(--text-color);
-  border-radius: 0.25em;         /* 4px */
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.875em;            /* 14px */
+  font-size: var(--font-size-base);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 0.375em;                  /* 6px */
+  gap: var(--spacing-xs);
 }
 
 .btn-icon {
-  width: 1.125em;                /* 18px */
-  height: 1.125em;               /* 18px */
+  width: var(--btn-icon-size);
+  height: var(--btn-icon-size);
   flex-shrink: 0;
   color: currentColor;
 }
 
 .btn-icon-only {
-  padding: 0.375em 0.625em;      /* 6px 10px */
+  padding: var(--btn-padding) var(--spacing-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -382,8 +382,8 @@ const getThemeTooltip = () => {
 
 .btn:hover:not(:disabled) {
   background-color: var(--bg-hover);
-  transform: translateY(-0.0625em);  /* -1px */
-  box-shadow: 0 0.125em 0.25em rgba(0, 0, 0, 0.1);  /* 0 2px 4px */
+  transform: translateY(calc(-1 * var(--border-width)));
+  box-shadow: 0 var(--spacing-xs) var(--spacing-sm) rgba(0, 0, 0, 0.1);
 }
 
 .btn:active:not(:disabled) {
@@ -407,8 +407,8 @@ const getThemeTooltip = () => {
 
 .btn-primary:hover:not(:disabled) {
   background-color: #40a9ff;
-  transform: translateY(-0.0625em);  /* -1px */
-  box-shadow: 0 0.125em 0.5em rgba(24, 144, 255, 0.3);  /* 0 2px 8px */
+  transform: translateY(calc(-1 * var(--border-width)));
+  box-shadow: 0 var(--spacing-xs) var(--spacing-md) rgba(24, 144, 255, 0.3);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -427,8 +427,8 @@ const getThemeTooltip = () => {
 
 .btn-danger:hover:not(:disabled) {
   background-color: #ff7875;
-  transform: translateY(-0.0625em);  /* -1px */
-  box-shadow: 0 0.125em 0.5em rgba(255, 77, 79, 0.3);  /* 0 2px 8px */
+  transform: translateY(calc(-1 * var(--border-width)));
+  box-shadow: 0 var(--spacing-xs) var(--spacing-md) rgba(255, 77, 79, 0.3);
 }
 
 .btn-danger:active:not(:disabled) {

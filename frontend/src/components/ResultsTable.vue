@@ -395,46 +395,46 @@ const handleBatchDelete = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75em 1em;           /* 12px 16px */
+  padding: var(--spacing-md) var(--spacing-lg);
   background-color: var(--toolbar-bg);
-  border-bottom: 0.0625em solid var(--border-color);  /* 1px */
+  border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .table-header h3 {
-  font-size: 0.875em;            /* 14px */
+  font-size: var(--font-size-sm);
   font-weight: 600;
 }
 
 .table-actions {
   display: flex;
-  gap: 0.5em;                    /* 8px */
+  gap: var(--spacing-sm);
   align-items: center;
 }
 
 .btn-batch-delete {
-  padding: 0.3125em 0.75em;      /* 5px 12px */
+  padding: var(--spacing-xs) var(--spacing-md);
   background-color: var(--error-color);
   color: white;
   border: none;
-  border-radius: 0.25em;         /* 4px */
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.8125em;           /* 13px */
+  font-size: var(--font-size-sm);
   font-weight: 500;
   transition: all 0.2s;
 }
 
 .btn-batch-delete:hover {
   background-color: #cf1322;
-  transform: translateY(-0.0625em);  /* -1px */
-  box-shadow: 0 0.125em 0.25em rgba(245, 34, 45, 0.3);  /* 0 2px 4px */
+  transform: translateY(calc(-1 * var(--border-width)));
+  box-shadow: 0 var(--spacing-xs) var(--spacing-sm) rgba(245, 34, 45, 0.3);
 }
 
 .search-input {
-  padding: 0.3125em 0.625em;     /* 5px 10px */
-  border: 0.0625em solid var(--border-color);  /* 1px */
-  border-radius: 0.25em;         /* 4px */
-  font-size: 0.8125em;           /* 13px */
-  width: 12.5em;                 /* 200px */
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  width: clamp(10rem, 15vw, 15rem);  /* 响应式宽度 */
   background-color: var(--input-bg);
   color: var(--text-color);
 }
@@ -447,7 +447,7 @@ const handleBatchDelete = async () => {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8125em;           /* 13px */
+  font-size: var(--font-size-sm);
 }
 
 thead {
@@ -458,10 +458,10 @@ thead {
 }
 
 th {
-  padding: 0.625em 0.5em;        /* 10px 8px */
+  padding: var(--spacing-sm) var(--spacing-xs);
   text-align: left;
   font-weight: 600;
-  border-bottom: 0.125em solid var(--border-color);  /* 2px */
+  border-bottom: var(--border-width-thick) solid var(--border-color);
   user-select: none;
   transition: background-color 0.15s ease;
   position: relative;
@@ -476,7 +476,7 @@ th.sortable:hover {
 }
 
 th.checkbox-col {
-  width: 3.5em;                  /* 56px */
+  width: clamp(3rem, 4vw, 4rem);  /* 响应式宽度 */
   text-align: center;
   cursor: default;
 }
@@ -487,26 +487,26 @@ th.checkbox-col:hover {
 
 .sort-indicator {
   display: inline-block;
-  margin-left: 0.25em;           /* 4px */
-  font-size: 0.75em;             /* 12px */
+  margin-left: var(--spacing-xs);
+  font-size: 0.9em;  /* 相对于表头字体 */
   opacity: 0.8;
 }
 
 td {
-  padding: 0.5em;                /* 8px */
-  border-bottom: 0.0625em solid var(--border-color);  /* 1px */
+  padding: var(--spacing-sm);
+  border-bottom: var(--border-width) solid var(--border-color);
   color: var(--text-color);
 }
 
 td.checkbox-col {
-  width: 3.5em;                  /* 56px */
+  width: clamp(3rem, 4vw, 4rem);
   text-align: center;
 }
 
 td.checkbox-col input[type="checkbox"] {
   cursor: pointer;
-  width: 0.875em;                /* 14px */
-  height: 0.875em;               /* 14px */
+  width: var(--btn-icon-size);
+  height: var(--btn-icon-size);
 }
 
 tr {
@@ -518,7 +518,7 @@ tr:hover {
 }
 
 .path-cell {
-  max-width: 12.5em;             /* 200px */
+  max-width: clamp(10rem, 15vw, 15rem);  /* 响应式最大宽度 */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -541,27 +541,27 @@ tr:hover {
 .actions-cell {
   white-space: nowrap;
   display: flex;
-  gap: 0.5em;  /* ✅ 相对间距 */
+  gap: var(--spacing-xs);
 }
 
 .btn-action {
-  padding: 0.4em;              /* ✅ 相对内边距 */
+  padding: var(--spacing-xs);
   border: none;
   background-color: transparent;
   color: var(--text-color);
-  border-radius: 0.25em;       /* ✅ 相对圆角 */
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 2em;              /* ✅ 相对最小宽度 */
-  min-height: 2em;             /* ✅ 相对最小高度 */
+  min-width: var(--btn-min-size);
+  min-height: var(--btn-min-size);
 }
 
 .btn-action:hover {
   background-color: var(--bg-hover);
-  transform: translateY(-0.0625em);  /* ✅ 相对位移 */
+  transform: translateY(calc(-1 * var(--border-width)));
 }
 
 .btn-action:active {
@@ -569,8 +569,8 @@ tr:hover {
 }
 
 .action-icon {
-  width: 1.125em;              /* ✅ 18px / 16px = 1.125em */
-  height: 1.125em;
+  width: var(--btn-icon-size);
+  height: var(--btn-icon-size);
   fill: currentColor;
 }
 
@@ -584,7 +584,7 @@ tr:hover {
 
 .btn-delete:hover {
   background-color: rgba(255, 77, 79, 0.1);
-  transform: translateY(-0.0625em);
+  transform: translateY(calc(-1 * var(--border-width)));
 }
 
 .btn-delete:active {
