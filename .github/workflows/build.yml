@@ -51,20 +51,20 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       # Install pnpm first
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: latest
           run_install: false
 
       # Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: 'pnpm'
@@ -124,38 +124,38 @@ jobs:
               gcc-aarch64-linux-gnu \
               g++-aarch64-linux-gnu \
               libc6-dev-arm64-cross
-            
+          
             # Configure APT for multiarch properly
             sudo dpkg --add-architecture arm64
-            
+          
             # Remove or disable original sources to avoid conflicts
             sudo mv /etc/apt/sources.list /etc/apt/sources.list.bak 2>/dev/null || true
             sudo rm -f /etc/apt/sources.list.d/*.list 2>/dev/null || true
-            
+          
             # Create sources list for both amd64 (native) and arm64 (cross-compile)
             # amd64 uses archive.ubuntu.com, arm64 uses ports.ubuntu.com
-            echo 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/amd64-sources.list > /dev/null
-            echo 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/amd64-sources.list > /dev/null
-            echo 'deb [arch=amd64] http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/amd64-sources.list > /dev/null
-            
-            echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
-            echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
-            echo 'deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
-            
+            echo 'deb [arch=amd64] https://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/amd64-sources.list > /dev/null
+            echo 'deb [arch=amd64] https://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/amd64-sources.list > /dev/null
+            echo 'deb [arch=amd64] https://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/amd64-sources.list > /dev/null
+          
+            echo 'deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+          
             # Handle mirror configuration
             if [ -f /etc/apt/apt-mirrors.txt ]; then
                 sudo mv /etc/apt/apt-mirrors.txt /etc/apt/apt-mirrors.txt.bak
             fi
-            
+          
             # Debug: show sources configuration
             echo "=== Sources List ==="
             cat /etc/apt/sources.list.d/arm64-sources.list
             echo "=== Architecture ==="
             dpkg --print-architecture
             dpkg --print-foreign-architectures
-            
+          
             sudo apt-get update
-            
+          
             # Install ARM64 versions of required libraries
             sudo apt-get install -y \
               libwebkit2gtk-4.1-dev:arm64 \
@@ -210,7 +210,7 @@ jobs:
           cd src-tauri
           # Use cargo tauri build with --no-bundle to skip packaging and only generate EXE
           cargo tauri build --target ${{ matrix.target }} --no-bundle
-          
+
       # Debug: List build outputs
       - name: List build outputs
         if: startsWith(matrix.platform, 'windows')
@@ -224,7 +224,7 @@ jobs:
       # Upload artifacts
       - name: Upload Windows artifacts
         if: startsWith(matrix.platform, 'windows')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dataguard-scanner-${{ matrix.platform }}
           path: |
@@ -234,7 +234,7 @@ jobs:
 
       - name: Upload Linux artifacts
         if: startsWith(matrix.platform, 'linux')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dataguard-scanner-${{ matrix.platform }}
           path: |
@@ -245,7 +245,7 @@ jobs:
 
       - name: Upload macOS artifacts
         if: startsWith(matrix.platform, 'macos')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dataguard-scanner-${{ matrix.platform }}
           path: |
@@ -267,10 +267,10 @@ jobs:
             Copy-Item $exeFile (Join-Path $targetDir $newName)
             Write-Host "Renamed to: $newName"
           }
-        
+
       - name: Upload Windows Portable EXE Artifact
         if: startsWith(matrix.platform, 'windows')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dataguard-scanner-${{ matrix.platform }}-portable
           path: |
@@ -287,7 +287,7 @@ jobs:
     
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
