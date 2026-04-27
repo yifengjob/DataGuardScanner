@@ -145,8 +145,12 @@ fn main() {
                         height: height as f64,
                     }));
                     
-                    // 居中窗口
-                    let _ = window.center();
+                    // 延迟一小段时间再居中，确保窗口大小已生效
+                    let window_clone = window.clone();
+                    tauri::async_runtime::spawn(async move {
+                        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                        let _ = window_clone.center();
+                    });
                 }
             }
             Ok(())

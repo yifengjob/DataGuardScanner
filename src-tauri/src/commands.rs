@@ -304,8 +304,6 @@ pub fn open_file(path: String) -> Result<(), String> {
 pub fn open_file_location(path: String) -> Result<(), String> {
     use std::path::Path;
     
-    let path_obj = Path::new(&path);
-    
     // 在不同平台上打开目录
     #[cfg(target_os = "windows")]
     {
@@ -328,6 +326,7 @@ pub fn open_file_location(path: String) -> Result<(), String> {
     #[cfg(target_os = "linux")]
     {
         // Linux: 使用 xdg-open 打开目录
+        let path_obj = Path::new(&path);
         let parent = path_obj.parent()
             .ok_or_else(|| "无法获取文件所在目录".to_string())?;
         open::that(parent).map_err(|e| format!("无法打开目录: {}", e))?;
