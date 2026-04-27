@@ -395,13 +395,13 @@ const handleBatchDelete = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 0.5em 1em;                /* 8px 16px - 表头内边距 */
   background-color: var(--toolbar-bg);
   border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .table-header h3 {
-  font-size: var(--font-size-sm);
+  font-size: 0.9em;                  /* 略小于基础字体 */
   font-weight: 600;
 }
 
@@ -412,29 +412,28 @@ const handleBatchDelete = async () => {
 }
 
 .btn-batch-delete {
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: 0.25em 0.75em;            /* 4px 12px - 紧凑按钮 */
   background-color: var(--error-color);
   color: white;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: var(--font-size-sm);
+  font-size: 0.85em;                 /* 略小字体 */
   font-weight: 500;
   transition: all 0.2s;
 }
 
 .btn-batch-delete:hover {
   background-color: #cf1322;
-  transform: translateY(calc(-1 * var(--border-width)));
-  box-shadow: 0 var(--spacing-xs) var(--spacing-sm) rgba(245, 34, 45, 0.3);
+  box-shadow: 0 1px 3px rgba(245, 34, 45, 0.2);
 }
 
 .search-input {
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 0.25em 0.625em;           /* 4px 10px - 搜索框 */
   border: var(--border-width) solid var(--border-color);
   border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  width: clamp(10rem, 15vw, 15rem);  /* 响应式宽度 */
+  font-size: 0.85em;
+  width: clamp(10rem, 15vw, 15rem);
   background-color: var(--input-bg);
   color: var(--text-color);
 }
@@ -458,13 +457,14 @@ thead {
 }
 
 th {
-  padding: var(--spacing-sm) var(--spacing-xs);
+  padding: 0.5em 0.625em;            /* 8px 10px - 表头单元格 */
   text-align: left;
   font-weight: 600;
   border-bottom: var(--border-width-thick) solid var(--border-color);
   user-select: none;
   transition: background-color 0.15s ease;
   position: relative;
+  font-size: 0.9em;
 }
 
 th.sortable {
@@ -493,7 +493,7 @@ th.checkbox-col:hover {
 }
 
 td {
-  padding: var(--spacing-sm);
+  padding: 0.5em 0.625em;            /* 8px 10px - 表格单元格 */
   border-bottom: var(--border-width) solid var(--border-color);
   color: var(--text-color);
 }
@@ -541,11 +541,11 @@ tr:hover {
 .actions-cell {
   white-space: nowrap;
   display: flex;
-  gap: var(--spacing-xs);
+  gap: 0.25em;                       /* 4px - 操作按钮间距 */
 }
 
 .btn-action {
-  padding: var(--spacing-xs);
+  padding: 0.25em;                   /* 4px - 操作按钮内边距 */
   border: none;
   background-color: transparent;
   color: var(--text-color);
@@ -555,13 +555,12 @@ tr:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: var(--btn-min-size);
-  min-height: var(--btn-min-size);
+  min-width: 1.75em;                 /* 28px - 最小点击区域 */
+  min-height: 1.75em;
 }
 
 .btn-action:hover {
   background-color: var(--bg-hover);
-  transform: translateY(calc(-1 * var(--border-width)));
 }
 
 .btn-action:active {
@@ -569,8 +568,8 @@ tr:hover {
 }
 
 .action-icon {
-  width: var(--btn-icon-size);
-  height: var(--btn-icon-size);
+  width: 1em;                        /* 相对于按钮字体 */
+  height: 1em;
   fill: currentColor;
 }
 
@@ -584,7 +583,6 @@ tr:hover {
 
 .btn-delete:hover {
   background-color: rgba(255, 77, 79, 0.1);
-  transform: translateY(calc(-1 * var(--border-width)));
 }
 
 .btn-delete:active {

@@ -320,22 +320,22 @@ const getThemeTooltip = () => {
 
 .menu-bar {
   display: flex;
-  gap: var(--spacing-xl);
-  padding: var(--spacing-sm) var(--spacing-lg);
+  gap: var(--spacing-lg);
+  padding: 0.375em 1em;              /* 6px 16px - 紧凑的菜单栏 */
   background-color: var(--menu-bg);
   border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .menu-item {
   cursor: pointer;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 0.25em 0.5em;             /* 4px 8px - 菜单项内边距 */
   border-radius: var(--radius-sm);
   transition: all 0.15s ease;
+  font-size: 0.9em;                  /* 略小于基础字体 */
 }
 
 .menu-item:hover {
   background-color: var(--bg-hover);
-  transform: translateY(calc(-1 * var(--border-width)));
 }
 
 .menu-item.disabled {
@@ -347,34 +347,34 @@ const getThemeTooltip = () => {
 .toolbar {
   display: flex;
   gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: 0.5em 1em;                /* 8px 16px - 工具栏内边距 */
   background-color: var(--toolbar-bg);
   border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .btn {
-  padding: var(--btn-padding) var(--spacing-lg);
+  padding: 0.375em 1em;              /* 6px 16px - 按钮内边距 */
   border: var(--border-width) solid var(--border-color);
   background-color: var(--bg-color);
   color: var(--text-color);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: var(--font-size-base);
+  font-size: 0.9em;                  /* 略小于基础字体 */
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: 0.375em;                      /* 6px - 图标与文字间距 */
 }
 
 .btn-icon {
-  width: var(--btn-icon-size);
-  height: var(--btn-icon-size);
+  width: 1.1em;                      /* 相对于按钮字体 */
+  height: 1.1em;
   flex-shrink: 0;
   color: currentColor;
 }
 
 .btn-icon-only {
-  padding: var(--btn-padding) var(--spacing-md);
+  padding: 0.375em 0.625em;          /* 6px 10px - 图标按钮 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -382,8 +382,7 @@ const getThemeTooltip = () => {
 
 .btn:hover:not(:disabled) {
   background-color: var(--bg-hover);
-  transform: translateY(calc(-1 * var(--border-width)));
-  box-shadow: 0 var(--spacing-xs) var(--spacing-sm) rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);  /* 轻微阴影 */
 }
 
 .btn:active:not(:disabled) {
@@ -407,8 +406,7 @@ const getThemeTooltip = () => {
 
 .btn-primary:hover:not(:disabled) {
   background-color: #40a9ff;
-  transform: translateY(calc(-1 * var(--border-width)));
-  box-shadow: 0 var(--spacing-xs) var(--spacing-md) rgba(24, 144, 255, 0.3);
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -427,8 +425,7 @@ const getThemeTooltip = () => {
 
 .btn-danger:hover:not(:disabled) {
   background-color: #ff7875;
-  transform: translateY(calc(-1 * var(--border-width)));
-  box-shadow: 0 var(--spacing-xs) var(--spacing-md) rgba(255, 77, 79, 0.3);
+  box-shadow: 0 2px 4px rgba(255, 77, 79, 0.2);
 }
 
 .btn-danger:active:not(:disabled) {
@@ -486,21 +483,21 @@ const getThemeTooltip = () => {
 /* 折叠按钮 - 绝对定位，始终在容器右侧 */
 .sidebar-toggle {
   position: absolute;
-  right: -16px;
+  right: -0.75em;                    /* 12px */
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 60px;
+  width: 1em;                        /* 16px */
+  height: 3.75em;                    /* 60px */
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: var(--bg-hover);
-  border: 1px solid var(--border-color);
+  border: var(--border-width) solid var(--border-color);
   border-left: none;
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   cursor: pointer;
   user-select: none;
-  font-size: 12px;
+  font-size: 0.75em;                 /* 12px */
   color: var(--text-secondary);
   transition: all 0.2s ease;
   z-index: 100;
