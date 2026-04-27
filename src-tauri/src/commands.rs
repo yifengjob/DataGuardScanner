@@ -302,8 +302,6 @@ pub fn open_file(path: String) -> Result<(), String> {
 /// 打开文件所在目录
 #[tauri::command]
 pub fn open_file_location(path: String) -> Result<(), String> {
-    use std::path::Path;
-    
     // 在不同平台上打开目录
     #[cfg(target_os = "windows")]
     {
@@ -325,6 +323,8 @@ pub fn open_file_location(path: String) -> Result<(), String> {
     
     #[cfg(target_os = "linux")]
     {
+        use std::path::Path;
+        
         // Linux: 使用 xdg-open 打开目录
         let path_obj = Path::new(&path);
         let parent = path_obj.parent()
