@@ -677,7 +677,7 @@ dependencies = [
 
 [[package]]
 name = "dataguard-scanner"
-version = "1.0.3"
+version = "1.0.4"
 dependencies = [
  "calamine",
  "chrono",
