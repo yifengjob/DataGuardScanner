@@ -20,27 +20,41 @@
         class="btn btn-primary" 
         @click="handleStartScan"
         :disabled="isScanning"
+        title="开始扫描选中的目录"
       >
-        {{ isScanning ? '扫描中...' : '开始扫描' }}
+        <img :src="playIcon" class="btn-icon" alt="" />
+        <span>{{ isScanning ? '扫描中...' : '开始扫描' }}</span>
       </button>
       <button 
         class="btn btn-danger" 
         @click="handleCancelScan"
         :disabled="!isScanning"
+        title="取消当前扫描任务"
       >
-        取消
+        <img :src="pauseIcon" class="btn-icon" alt="" />
+        <span>取消</span>
       </button>
       <button 
-        class="btn" 
+        class="btn btn-icon-only" 
         @click="handleExportReport"
         :disabled="scanResults.length === 0"
         :title="scanResults.length === 0 ? '暂无扫描结果，无法导出' : '导出报告'"
       >
-        导出报告
+        <img :src="exportIcon" class="btn-icon" alt="导出报告" />
       </button>
-      <button class="btn" @click="showSettings = true">设置</button>
-      <button class="btn theme-toggle" @click="toggleTheme" :title="getThemeTooltip()">
-        {{ getThemeIcon() }}
+      <button 
+        class="btn btn-icon-only" 
+        @click="showSettings = true"
+        title="打开设置"
+      >
+        <img :src="settingIcon" class="btn-icon" alt="设置" />
+      </button>
+      <button 
+        class="btn btn-icon-only theme-toggle" 
+        @click="toggleTheme" 
+        :title="getThemeTooltip()"
+      >
+        <img :src="lightDarkIcon" class="btn-icon" alt="切换主题" />
       </button>
     </div>
 
@@ -127,6 +141,13 @@ import EnvironmentCheck from './components/EnvironmentCheck.vue'
 import { startScan, cancelScan, loadConfig, onScanProgress, onScanResult, onScanFinished, onScanError, onScanLog } from './utils/tauri-api'
 import { applyTheme, loadTheme, watchSystemTheme } from './utils/theme'
 import type { ThemeMode } from './utils/theme'
+
+// 导入 SVG 图标
+import playIcon from '@/assets/play.svg'
+import pauseIcon from '@/assets/pause.svg'
+import exportIcon from '@/assets/export.svg'
+import settingIcon from '@/assets/setting.svg'
+import lightDarkIcon from '@/assets/light-dark.svg'
 
 const appStore = useAppStore()
 const { isScanning, scannedCount, sensitiveFilesCount, errorCount, totalSensitiveItems, config, scanResults } = storeToRefs(appStore)
@@ -274,18 +295,6 @@ const toggleTheme = () => {
 }
 
 // 获取主题图标
-const getThemeIcon = () => {
-  switch (currentTheme.value) {
-    case 'light':
-      return '☀️'
-    case 'dark':
-      return '🌙'
-    case 'system':
-      return '💻'
-    default:
-      return '☀️'
-  }
-}
 
 // 获取主题提示文本
 const getThemeTooltip = () => {
@@ -353,6 +362,22 @@ const getThemeTooltip = () => {
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.btn-icon-only {
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn:hover:not(:disabled) {
@@ -376,6 +401,10 @@ const getThemeTooltip = () => {
   border-color: var(--primary-color);
 }
 
+.btn-primary .btn-icon {
+  filter: brightness(0) invert(1); /* 确保图标为白色 */
+}
+
 .btn-primary:hover:not(:disabled) {
   background-color: #40a9ff;
   transform: translateY(-1px);
@@ -392,6 +421,10 @@ const getThemeTooltip = () => {
   border-color: var(--error-color);
 }
 
+.btn-danger .btn-icon {
+  filter: brightness(0) invert(1); /* 确保图标为白色 */
+}
+
 .btn-danger:hover:not(:disabled) {
   background-color: #ff7875;
   transform: translateY(-1px);
@@ -403,9 +436,11 @@ const getThemeTooltip = () => {
 }
 
 .theme-toggle {
-  font-size: 18px;
-  padding: 6px 12px;
   transition: all 0.2s ease;
+}
+
+.theme-toggle .btn-icon {
+  /* SVG 会自动继承 currentColor，适配主题切换 */
 }
 
 .main-content {
