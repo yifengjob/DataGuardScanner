@@ -10,6 +10,18 @@ import 'virtual:svg-icons-register'
 const initialTheme = loadTheme()
 applyTheme(initialTheme)
 
+// 检测平台并添加对应的类名
+import { platform } from '@tauri-apps/plugin-os'
+
+const currentPlatform = platform()
+if (currentPlatform === 'macos') {
+  document.body.classList.add('platform-macos')
+} else if (currentPlatform === 'windows') {
+  document.body.classList.add('platform-windows')
+} else if (currentPlatform === 'linux') {
+  document.body.classList.add('platform-linux')
+}
+
 const app = createApp(App)
 const pinia = createPinia()
 
