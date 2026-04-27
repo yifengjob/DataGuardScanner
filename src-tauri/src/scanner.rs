@@ -80,6 +80,10 @@ pub async fn run_scan(
             .follow_links(false)
             .into_iter()
             .filter_entry(|e| {
+                // 在 filter_entry 中也检查取消标志
+                if cancel_flag.load(Ordering::Relaxed) {
+                    return false;
+                }
                 should_include_directory(e, &config)
             })
         {
