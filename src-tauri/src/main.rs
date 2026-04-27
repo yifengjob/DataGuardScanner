@@ -99,6 +99,7 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_os::init())
         .manage(ScanState::new())
         .invoke_handler(tauri::generate_handler![
             get_directory_tree,
