@@ -371,6 +371,7 @@ const getThemeTooltip = () => {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  color: currentColor; /* 确保继承父元素颜色 */
 }
 
 .btn-icon-only {
@@ -440,7 +441,8 @@ const getThemeTooltip = () => {
 }
 
 .theme-toggle .btn-icon {
-  /* SVG 会自动继承 currentColor，适配主题切换 */
+  color: var(--text-color); /* 明确指定使用主题文本颜色 */
+  transition: color 0.2s ease;
 }
 
 .main-content {
