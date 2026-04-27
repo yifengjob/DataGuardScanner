@@ -33,7 +33,7 @@
             />
           </th>
           <th 
-            class="sortable" 
+            class="sortable path-col"
             :class="{ 'sorted-asc': sortField === 'file_path' && sortOrder === 'asc', 'sorted-desc': sortField === 'file_path' && sortOrder === 'desc' }"
             @click="sortBy('file_path')"
             title="点击排序"
@@ -442,11 +442,12 @@ const handleBatchDelete = async () => {
 
 .table-content {
   flex: 1;
-  overflow: auto;
+  overflow: auto;                    /* 允许水平滚动 */
 }
 
 table {
-  width: 100%;
+  width: max-content;                /* 表格宽度根据内容自适应 */
+  min-width: 100%;                   /* 至少占满容器 */
   border-collapse: collapse;
   font-size: 0.95em;                 /* 表格字体略大于默认 */
 }
@@ -472,6 +473,14 @@ th {
   text-overflow: ellipsis;
 }
 
+th.path-col {
+  position: sticky;                  /* 固定列 */
+  left: 3.5em;                       /* 在复选框列右侧 (56px) */
+  z-index: 9;                        /* 略低于复选框列 */
+  background-color: var(--bg-hover); /* 需要背景色 */
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);  /* 右侧阴影 */
+}
+
 th.sortable {
   cursor: pointer;
 }
@@ -481,24 +490,36 @@ th.sortable:hover {
 }
 
 th.checkbox-col {
-  width: 3em;                        /* 48px - 增大宽度，避免被按钮遮挡 */
+  position: sticky;                  /* 固定列 */
+  left: 0;                           /* 固定在左侧 */
+  min-width: 3.5em;                  /* 56px - 最小宽度，避免被按钮遮挡 */
+  max-width: 3.5em;                  /* 固定宽度 */
+  width: 3.5em;
   text-align: center;
   cursor: default;
+  z-index: 10;                       /* 高于普通列 */
+  background-color: var(--bg-hover); /* 需要背景色，否则透明 */
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);  /* 右侧阴影 */
 }
 
 th.checkbox-col:hover {
-  background-color: transparent;
+  background-color: var(--bg-selected);
 }
 
 /* 操作列固定宽度 */
 th.actions-col {
+  position: sticky;                  /* 固定列 */
+  right: 0;                          /* 固定在右侧 */
   width: 10.5em;                     /* 168px - 容纳 4 个 32px 按钮 + 间距 */
   text-align: center;
   cursor: default;
+  z-index: 10;                       /* 高于普通列 */
+  background-color: var(--bg-hover); /* 需要背景色 */
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05); /* 左侧阴影 */
 }
 
 th.actions-col:hover {
-  background-color: transparent;
+  background-color: var(--bg-selected);
 }
 
 .sort-indicator {
@@ -519,19 +540,31 @@ td {
 }
 
 td.checkbox-col {
-  width: 3em;                        /* 48px */
+  position: sticky;                  /* 固定列 */
+  left: 0;                           /* 固定在左侧 */
+  min-width: 3.5em;                  /* 56px */
+  max-width: 3.5em;                  /* 固定宽度 */
+  width: 3.5em;
   text-align: center;
   overflow: visible;                 /* 复选框完整显示 */
   text-overflow: clip;
+  z-index: 10;                       /* 高于普通列 */
+  background-color: var(--bg-color); /* 需要背景色 */
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);  /* 右侧阴影 */
 }
 
 /* 操作列固定宽度 */
 td.actions-col {
+  position: sticky;                  /* 固定列 */
+  right: 0;                          /* 固定在右侧 */
   width: 10.5em;                     /* 168px */
   text-align: center;
   padding: 0.3125em 0.5em;          /* 5px 8px - 舒适的垂直间距 */
   overflow: visible;                 /* 按钮完整显示 */
   text-overflow: clip;               /* 不显示省略号 */
+  z-index: 10;                       /* 高于普通列 */
+  background-color: var(--bg-color); /* 需要背景色 */
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05); /* 左侧阴影 */
 }
 
 td.checkbox-col input[type="checkbox"] {
@@ -549,8 +582,13 @@ tr:hover {
 }
 
 .path-cell {
+  position: sticky;                  /* 固定列 */
+  left: 3.5em;                       /* 在复选框列右侧 (56px) */
   max-width: 25em;                   /* 400px - 限制最大宽度 */
   min-width: 10em;                   /* 160px - 最小宽度 */
+  z-index: 9;                        /* 略低于复选框列 */
+  background-color: var(--bg-color); /* 需要背景色 */
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);  /* 右侧阴影 */
 }
 
 .size-cell, .number-cell, .total-cell {
