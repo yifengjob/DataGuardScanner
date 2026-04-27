@@ -1,5 +1,27 @@
 use std::process::Command;
 
+/// Windows 平台隐藏命令窗口标志
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+/// 跨平台执行命令（Windows 下隐藏窗口）
+#[cfg(target_os = "windows")]
+fn run_command_hidden(program: &str, args: &[&str]) -> std::io::Result<std::process::Output> {
+    use std::os::windows::process::CommandExt;
+    
+    Command::new(program)
+        .args(args)
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+}
+
+#[cfg(not(target_os = "windows"))]
+fn run_command_hidden(program: &str, args: &[&str]) -> std::io::Result<std::process::Output> {
+    Command::new(program)
+        .args(args)
+        .output()
+}
+
 /// 系统环境检查结果
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct EnvironmentCheck {
@@ -62,9 +84,7 @@ fn get_os_version() -> String {
     match std::env::consts::OS {
         "windows" => {
             // 尝试获取 Windows 版本
-            if let Ok(version) = Command::new("cmd")
-                .args(["/c", "ver"])
-                .output()
+            if let Ok(version) = run_command_hidden("cmd", &["/c", "ver"])
             {
                 String::from_utf8_lossy(&version.stdout).trim().to_string()
             } else {
@@ -72,9 +92,7 @@ fn get_os_version() -> String {
             }
         }
         "macos" => {
-            if let Ok(version) = Command::new("sw_vers")
-                .arg("-productVersion")
-                .output()
+            if let Ok(version) = run_command_hidden("sw_vers", &["-productVersion"])
             {
                 format!("macOS {}", String::from_utf8_lossy(&version.stdout).trim())
             } else {
@@ -82,9 +100,7 @@ fn get_os_version() -> String {
             }
         }
         "linux" => {
-            if let Ok(version) = Command::new("uname")
-                .arg("-r")
-                .output()
+            if let Ok(version) = run_command_hidden("uname", &["-r"])
             {
                 format!("Linux {}", String::from_utf8_lossy(&version.stdout).trim())
             } else {
@@ -134,9 +150,7 @@ fn check_macos_environment(issues: &mut Vec<EnvironmentIssue>) {
     // Tauri 使用系统自带的 WebKit
     
     // 可以检查 macOS 版本是否过旧
-    if let Ok(version) = Command::new("sw_vers")
-        .arg("-productVersion")
-        .output()
+    if let Ok(version) = run_command_hidden("sw_vers", &["-productVersion"])
     {
         let version_str = String::from_utf8_lossy(&version.stdout).trim().to_string();
         let parts: Vec<&str> = version_str.split('.').collect();
@@ -181,9 +195,7 @@ fn check_linux_environment(issues: &mut Vec<EnvironmentIssue>) {
 /// 检查是否是 Windows 7/8/8.1 或更旧版本
 fn is_windows_7_or_older() -> bool {
     // 使用 cmd 检查 Windows 版本
-    if let Ok(output) = Command::new("cmd")
-        .args(["/c", "ver"])
-        .output()
+    if let Ok(output) = run_command_hidden("cmd", &["/c", "ver"])
     {
         let version_output = String::from_utf8_lossy(&output.stdout);
         
@@ -211,12 +223,13 @@ fn is_windows_7_or_older() -> bool {
 /// 检查 WebView2 是否已安装
 fn is_webview2_installed() -> bool {
     // 使用 reg 命令检查注册表
-    let reg_check = Command::new("reg")
-        .args([
+    let reg_check = run_command_hidden(
+        "reg",
+        &[
             "query",
             r"HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
-        ])
-        .output();
+        ]
+    );
     
     if let Ok(output) = reg_check
         && output.status.success() {
@@ -224,12 +237,13 @@ fn is_webview2_installed() -> bool {
     }
     
     // 检查当前用户的注册表
-    let reg_check2 = Command::new("reg")
-        .args([
+    let reg_check2 = run_command_hidden(
+        "reg",
+        &[
             "query",
             r"HKCU\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
-        ])
-        .output();
+        ]
+    );
     
     if let Ok(output) = reg_check2 {
         return output.status.success();
@@ -249,9 +263,7 @@ fn is_vc_redist_installed() -> bool {
     ];
     
     for version in versions {
-        if let Ok(output) = Command::new("reg")
-            .args(["query", version])
-            .output()
+        if let Ok(output) = run_command_hidden("reg", &["query", version])
             && output.status.success() {
             return true;
         }
@@ -263,25 +275,18 @@ fn is_vc_redist_installed() -> bool {
 /// 检查 Linux 库是否安装
 fn is_library_installed(lib_name: &str) -> bool {
     // 使用 dpkg (Debian/Ubuntu) 或 rpm (RedHat/CentOS) 检查
-    if let Ok(_output) = Command::new("dpkg")
-        .args(["-l", lib_name])
-        .output()
+    if let Ok(_output) = run_command_hidden("dpkg", &["-l", lib_name])
     {
         return true;
     }
     
-    if let Ok(_output) = Command::new("rpm")
-        .args(["-q", lib_name])
-        .output()
+    if let Ok(_output) = run_command_hidden("rpm", &["-q", lib_name])
     {
         return true;
     }
     
     // 简单检查：尝试使用 pkg-config
-    if let Ok(output) = Command::new("pkg-config")
-        .arg("--exists")
-        .arg(lib_name)
-        .output()
+    if let Ok(output) = run_command_hidden("pkg-config", &["--exists", lib_name])
     {
         return output.status.success();
     }
