@@ -110,10 +110,18 @@
           </td>
           <td class="total-cell">{{ item.total }}</td>
           <td class="actions-cell">
-            <button class="btn-action" @click="handlePreview(item)">预览</button>
-            <button class="btn-action" @click="handleOpen(item)">打开</button>
-            <button class="btn-action" @click="handleOpenLocation(item)">所在目录</button>
-            <button class="btn-action btn-delete" @click="handleDelete(item)">删除</button>
+            <button class="btn-action" @click="handlePreview(item)" title="预览">
+              <img src="../assets/preview.svg" alt="预览" class="action-icon" />
+            </button>
+            <button class="btn-action" @click="handleOpen(item)" title="打开">
+              <img src="../assets/openfile.svg" alt="打开" class="action-icon" />
+            </button>
+            <button class="btn-action" @click="handleOpenLocation(item)" title="所在目录">
+              <img src="../assets/directory.svg" alt="所在目录" class="action-icon" />
+            </button>
+            <button class="btn-action btn-delete" @click="handleDelete(item)" title="删除">
+              <img src="../assets/delete.svg" alt="删除" class="action-icon delete-icon" />
+            </button>
           </td>
         </tr>
         </tbody>
@@ -524,18 +532,23 @@ tr:hover {
 
 .actions-cell {
   white-space: nowrap;
+  display: flex;
+  gap: 4px;
 }
 
 .btn-action {
-  padding: 3px 10px;
-  margin-right: 5px;
+  padding: 6px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-color);
   color: var(--text-color);
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
 }
 
 .btn-action:hover {
@@ -548,13 +561,23 @@ tr:hover {
   transform: translateY(0);
 }
 
+.action-icon {
+  width: 18px;
+  height: 18px;
+  /* SVG 使用 currentColor，会自动继承父元素的 color */
+}
+
+.delete-icon {
+  /* 删除图标会通过 .btn-delete 的 color 属性自动变为红色 */
+}
+
 .btn-delete {
   color: var(--error-color);
   border-color: var(--error-color);
 }
 
 .btn-delete:hover {
-  background-color: var(--bg-hover);
+  background-color: rgba(255, 77, 79, 0.1);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(255, 77, 79, 0.2);
 }
