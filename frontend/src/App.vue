@@ -501,7 +501,7 @@ const getThemeTooltip = () => {
   font-size: 0.75em;                 /* 12px */
   color: var(--text-secondary);
   transition: all 0.2s ease;
-  z-index: 10;
+  z-index: 100;                      /* 高于所有表格固定列 */
 }
 
 .sidebar-toggle:hover {
