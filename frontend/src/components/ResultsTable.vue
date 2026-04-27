@@ -456,7 +456,7 @@ thead {
   position: sticky;
   top: 0;
   background-color: var(--bg-hover);
-  z-index: 1;
+  z-index: 20;                       /* 高于所有固定列 */
 }
 
 th {
