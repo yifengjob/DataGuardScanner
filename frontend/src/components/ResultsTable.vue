@@ -32,11 +32,63 @@
               title="全选/取消全选"
             />
           </th>
-          <th @click="sortBy('file_path')">文件名</th>
-          <th @click="sortBy('file_size')">文件大小</th>
-          <th @click="sortBy('modified_time')">修改时间</th>
-          <th v-for="type in sensitiveTypes" :key="type.id">{{ type.name }}</th>
-          <th>总计</th>
+          <th 
+            class="sortable" 
+            :class="{ 'sorted-asc': sortField === 'file_path' && sortOrder === 'asc', 'sorted-desc': sortField === 'file_path' && sortOrder === 'desc' }"
+            @click="sortBy('file_path')"
+            title="点击排序"
+          >
+            文件名
+            <span v-if="sortField === 'file_path'" class="sort-indicator">
+              {{ sortOrder === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th 
+            class="sortable" 
+            :class="{ 'sorted-asc': sortField === 'file_size' && sortOrder === 'asc', 'sorted-desc': sortField === 'file_size' && sortOrder === 'desc' }"
+            @click="sortBy('file_size')"
+            title="点击排序"
+          >
+            文件大小
+            <span v-if="sortField === 'file_size'" class="sort-indicator">
+              {{ sortOrder === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th 
+            class="sortable" 
+            :class="{ 'sorted-asc': sortField === 'modified_time' && sortOrder === 'asc', 'sorted-desc': sortField === 'modified_time' && sortOrder === 'desc' }"
+            @click="sortBy('modified_time')"
+            title="点击排序"
+          >
+            修改时间
+            <span v-if="sortField === 'modified_time'" class="sort-indicator">
+              {{ sortOrder === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th 
+            v-for="type in sensitiveTypes" 
+            :key="type.id"
+            class="sortable"
+            :class="{ 'sorted-asc': sortField === `counts.${type.id}` && sortOrder === 'asc', 'sorted-desc': sortField === `counts.${type.id}` && sortOrder === 'desc' }"
+            @click="sortBy(`counts.${type.id}`)"
+            title="点击排序"
+          >
+            {{ type.name }}
+            <span v-if="sortField === `counts.${type.id}`" class="sort-indicator">
+              {{ sortOrder === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th 
+            class="sortable"
+            :class="{ 'sorted-asc': sortField === 'total' && sortOrder === 'asc', 'sorted-desc': sortField === 'total' && sortOrder === 'desc' }"
+            @click="sortBy('total')"
+            title="点击排序"
+          >
+            总计
+            <span v-if="sortField === 'total'" class="sort-indicator">
+              {{ sortOrder === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
           <th>操作</th>
         </tr>
         </thead>
@@ -133,8 +185,19 @@ const filteredResults = computed(() => {
   // 排序
   if (sortField.value) {
     results = [...results].sort((a, b) => {
-      let aVal: any = a[sortField.value as keyof typeof a]
-      let bVal: any = b[sortField.value as keyof typeof b]
+      let aVal: any
+      let bVal: any
+
+      // 处理 counts.xxx 字段（敏感类型计数）
+      if (sortField.value.startsWith('counts.')) {
+        const typeId = sortField.value.replace('counts.', '')
+        aVal = a.counts[typeId] || 0
+        bVal = b.counts[typeId] || 0
+      } else {
+        // 普通字段
+        aVal = a[sortField.value as keyof typeof a]
+        bVal = b[sortField.value as keyof typeof b]
+      }
 
       if (typeof aVal === 'string') {
         aVal = aVal.toLowerCase()
@@ -373,9 +436,17 @@ th {
   text-align: left;
   font-weight: 600;
   border-bottom: 2px solid var(--border-color);
-  cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease;
+  position: relative;
+}
+
+th.sortable {
+  cursor: pointer;
+}
+
+th.sortable:hover {
+  background-color: var(--bg-selected);
 }
 
 th.checkbox-col {
@@ -388,8 +459,11 @@ th.checkbox-col:hover {
   background-color: transparent;
 }
 
-th:hover {
-  background-color: var(--bg-selected);
+.sort-indicator {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+  opacity: 0.8;
 }
 
 td {
