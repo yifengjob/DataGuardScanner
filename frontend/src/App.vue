@@ -331,7 +331,7 @@ const getThemeTooltip = () => {
   padding: 0.25em 0.5em;             /* 4px 8px - 菜单项内边距 */
   border-radius: var(--radius-sm);
   transition: all 0.15s ease;
-  font-size: 0.9em;                  /* 略小于基础字体 */
+  font-size: 0.95em;                 /* 接近基础字体 */
 }
 
 .menu-item:hover {
@@ -359,7 +359,7 @@ const getThemeTooltip = () => {
   color: var(--text-color);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.9em;                  /* 略小于基础字体 */
+  font-size: 0.95em;                 /* 接近基础字体 */
   transition: all 0.2s ease;
   display: flex;
   align-items: center;

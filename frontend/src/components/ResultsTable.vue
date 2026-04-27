@@ -89,7 +89,7 @@
               {{ sortOrder === 'asc' ? '↑' : '↓' }}
             </span>
           </th>
-          <th>操作</th>
+          <th class="actions-col">操作</th>
         </tr>
         </thead>
         <tbody>
@@ -109,7 +109,8 @@
             {{ (item.counts[type.id] || 0) > 0 ? Number(item.counts[type.id]).toLocaleString() : '-' }}
           </td>
           <td class="total-cell">{{ item.total }}</td>
-          <td class="actions-cell">
+          <td class="actions-col">
+            <div class="actions-cell">
             <button class="btn-action" @click="handlePreview(item)" title="预览">
               <svg class="action-icon">
                 <use href="#icon-preview"></use>
@@ -130,6 +131,7 @@
                 <use href="#icon-delete"></use>
               </svg>
             </button>
+            </div>
           </td>
         </tr>
         </tbody>
@@ -401,7 +403,7 @@ const handleBatchDelete = async () => {
 }
 
 .table-header h3 {
-  font-size: 0.9em;                  /* 略小于基础字体 */
+  font-size: 0.95em;                 /* 接近基础字体 */
   font-weight: 600;
 }
 
@@ -418,7 +420,7 @@ const handleBatchDelete = async () => {
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.85em;                 /* 略小字体 */
+  font-size: 0.9em;                  /* 略小但可读 */
   font-weight: 500;
   transition: all 0.2s;
 }
@@ -432,7 +434,7 @@ const handleBatchDelete = async () => {
   padding: 0.25em 0.625em;           /* 4px 10px - 搜索框 */
   border: var(--border-width) solid var(--border-color);
   border-radius: var(--radius-sm);
-  font-size: 0.85em;
+  font-size: 0.9em;                  /* 略小但可读 */
   width: clamp(10rem, 15vw, 15rem);
   background-color: var(--input-bg);
   color: var(--text-color);
@@ -446,7 +448,7 @@ const handleBatchDelete = async () => {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--font-size-sm);
+  font-size: 0.95em;                 /* 表格字体略大于默认 */
 }
 
 thead {
@@ -457,14 +459,17 @@ thead {
 }
 
 th {
-  padding: 0.5em 0.625em;            /* 8px 10px - 表头单元格 */
+  padding: 0.5em 0.75em;             /* 8px 12px - VS Code 风格 */
   text-align: left;
   font-weight: 600;
   border-bottom: var(--border-width-thick) solid var(--border-color);
   user-select: none;
   transition: background-color 0.15s ease;
   position: relative;
-  font-size: 0.9em;
+  font-size: 0.9em;                  /* VS Code 表头略小 */
+  white-space: nowrap;               /* 防止表头换行 */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 th.sortable {
@@ -476,12 +481,23 @@ th.sortable:hover {
 }
 
 th.checkbox-col {
-  width: clamp(3rem, 4vw, 4rem);  /* 响应式宽度 */
+  width: 2.5em;                      /* 40px - VS Code 风格 */
   text-align: center;
   cursor: default;
 }
 
 th.checkbox-col:hover {
+  background-color: transparent;
+}
+
+/* 操作列固定宽度 */
+th.actions-col {
+  width: 10.5em;                     /* 168px - 容纳 4 个 32px 按钮 + 间距 */
+  text-align: center;
+  cursor: default;
+}
+
+th.actions-col:hover {
   background-color: transparent;
 }
 
@@ -493,14 +509,29 @@ th.checkbox-col:hover {
 }
 
 td {
-  padding: 0.5em 0.625em;            /* 8px 10px - 表格单元格 */
+  padding: 0.4375em 0.75em;          /* 7px 12px - VS Code 风格 */
   border-bottom: var(--border-width) solid var(--border-color);
   color: var(--text-color);
+  font-size: 0.9em;                  /* 与表头一致 */
+  white-space: nowrap;               /* 所有内容不换行 */
+  overflow: hidden;                  /* 超出隐藏 */
+  text-overflow: ellipsis;           /* 显示省略号 */
 }
 
 td.checkbox-col {
-  width: clamp(3rem, 4vw, 4rem);
+  width: 2.5em;                      /* 40px */
   text-align: center;
+  overflow: visible;                 /* 复选框完整显示 */
+  text-overflow: clip;
+}
+
+/* 操作列固定宽度 */
+td.actions-col {
+  width: 10.5em;                     /* 168px */
+  text-align: center;
+  padding: 0.3125em 0.5em;          /* 5px 8px - 舒适的垂直间距 */
+  overflow: visible;                 /* 按钮完整显示 */
+  text-overflow: clip;               /* 不显示省略号 */
 }
 
 td.checkbox-col input[type="checkbox"] {
@@ -518,14 +549,13 @@ tr:hover {
 }
 
 .path-cell {
-  max-width: clamp(10rem, 15vw, 15rem);  /* 响应式最大宽度 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* 文件名列使用默认样式，超出显示省略号 */
 }
 
 .size-cell, .number-cell, .total-cell {
   text-align: right;
+  overflow: visible;                 /* 数字列完整显示 */
+  text-overflow: clip;               /* 不显示省略号 */
 }
 
 .total-cell {
@@ -541,22 +571,23 @@ tr:hover {
 .actions-cell {
   white-space: nowrap;
   display: flex;
-  gap: 0.25em;                       /* 4px - 操作按钮间距 */
+  gap: 0.25em;                       /* 4px - 按钮间距 */
+  justify-content: center;           /* 居中对齐 */
 }
 
 .btn-action {
-  padding: 0.25em;                   /* 4px - 操作按钮内边距 */
+  padding: 0.25em;                   /* 4px - 内边距 */
   border: none;
   background-color: transparent;
   color: var(--text-color);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.75em;                 /* 28px - 最小点击区域 */
-  min-height: 1.75em;
+  min-width: 2em;                    /* 32px - 舒适的点击区域 */
+  min-height: 2em;
 }
 
 .btn-action:hover {
@@ -568,8 +599,8 @@ tr:hover {
 }
 
 .action-icon {
-  width: 1em;                        /* 相对于按钮字体 */
-  height: 1em;
+  width: 1.5em;                      /* 24px - 更大的图标 */
+  height: 1.5em;
   fill: currentColor;
 }
 

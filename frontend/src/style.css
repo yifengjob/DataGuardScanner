@@ -244,6 +244,12 @@ mark {
 /* ========== macOS 系统特定优化 ========== */
 /* macOS 用户习惯更大的 UI 元素，符合 Apple HIG 设计规范 */
 body.platform-macos {
+  /* 增大基础字体，提升可读性 */
+  --font-size-base: clamp(15px, 1.3vw, 17px);    /* 15-17px */
+  --font-size-sm: clamp(13px, 1.1vw, 15px);      /* 13-15px */
+  --font-size-lg: clamp(17px, 1.5vw, 19px);      /* 17-19px */
+  
+  /* 增大按钮和间距 */
   --btn-min-size: clamp(2rem, 2.3vw, 2.25rem);          /* 32-36px */
   --btn-padding: clamp(0.375rem, 0.6vw, 0.5625rem);     /* 6-9px */
   --btn-icon-size: clamp(1rem, 1.25vw, 1.25rem);        /* 16-20px */
