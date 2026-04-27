@@ -111,16 +111,24 @@
           <td class="total-cell">{{ item.total }}</td>
           <td class="actions-cell">
             <button class="btn-action" @click="handlePreview(item)" title="预览">
-              <img src="../assets/preview.svg" alt="预览" class="action-icon" />
+              <svg class="action-icon">
+                <use href="#icon-preview"></use>
+              </svg>
             </button>
             <button class="btn-action" @click="handleOpen(item)" title="打开">
-              <img src="../assets/openfile.svg" alt="打开" class="action-icon" />
+              <svg class="action-icon">
+                <use href="#icon-openfile"></use>
+              </svg>
             </button>
             <button class="btn-action" @click="handleOpenLocation(item)" title="所在目录">
-              <img src="../assets/directory.svg" alt="所在目录" class="action-icon" />
+              <svg class="action-icon">
+                <use href="#icon-directory"></use>
+              </svg>
             </button>
             <button class="btn-action btn-delete" @click="handleDelete(item)" title="删除">
-              <img src="../assets/delete.svg" alt="删除" class="action-icon delete-icon" />
+              <svg class="action-icon delete-icon">
+                <use href="#icon-delete"></use>
+              </svg>
             </button>
           </td>
         </tr>
@@ -533,13 +541,13 @@ tr:hover {
 .actions-cell {
   white-space: nowrap;
   display: flex;
-  gap: 4px;
+  gap: 8px;
 }
 
 .btn-action {
   padding: 6px;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-color);
+  border: none;                    /* ✅ 移除边框 */
+  background-color: transparent;   /* ✅ 透明背景 */
   color: var(--text-color);
   border-radius: 4px;
   cursor: pointer;
@@ -552,9 +560,8 @@ tr:hover {
 }
 
 .btn-action:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--bg-hover); /* ✅ 悬停时显示背景 */
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-action:active {
@@ -564,22 +571,20 @@ tr:hover {
 .action-icon {
   width: 18px;
   height: 18px;
-  /* SVG 使用 currentColor，会自动继承父元素的 color */
+  fill: currentColor;              /* ✅ SVG 填充颜色跟随文字颜色 */
 }
 
 .delete-icon {
-  /* 删除图标会通过 .btn-delete 的 color 属性自动变为红色 */
+  color: var(--error-color);       /* ✅ 删除图标直接应用红色 */
 }
 
 .btn-delete {
-  color: var(--error-color);
-  border-color: var(--error-color);
+  /* 不再需要边框颜色，由 .delete-icon 控制 */
 }
 
 .btn-delete:hover {
   background-color: rgba(255, 77, 79, 0.1);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(255, 77, 79, 0.2);
 }
 
 .btn-delete:active {
