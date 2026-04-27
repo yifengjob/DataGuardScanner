@@ -23,7 +23,10 @@
               提供实时扫描进度显示、敏感内容高亮预览、文件操作和报告导出等功能。
             </p>
             <p>
-              软件采用便携设计，无需安装即可使用（同时提供安装版），支持 Windows、macOS 和 Linux 平台。
+              软件采用便携设计，无需安装即可使用（同时提供安装版），支持 Windows 10+、macOS 和 Linux 平台。
+            </p>
+            <p style="color: var(--error-color); font-weight: 500;">
+              ⚠️ 注意：不支持 Windows 7/8/8.1，请使用 Windows 10 (版本 1809+) 或更高版本。
             </p>
           </div>
           
