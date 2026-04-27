@@ -112,6 +112,7 @@
           <td class="actions-cell">
             <button class="btn-action" @click="handlePreview(item)">预览</button>
             <button class="btn-action" @click="handleOpen(item)">打开</button>
+            <button class="btn-action" @click="handleOpenLocation(item)">所在目录</button>
             <button class="btn-action btn-delete" @click="handleDelete(item)">删除</button>
           </td>
         </tr>
@@ -131,7 +132,7 @@ import {ref, computed, onMounted, watch} from 'vue'
 import {useAppStore} from '../stores/app'
 import {storeToRefs} from 'pinia'
 import {formatFileSize, formatTime} from '../utils/format'
-import {openFile, deleteFile, getSensitiveRules} from '../utils/tauri-api'
+import {openFile, openFileLocation, deleteFile, getSensitiveRules} from '../utils/tauri-api'
 import {ask} from '@tauri-apps/plugin-dialog'
 
 const appStore = useAppStore()
@@ -240,6 +241,15 @@ const handleOpen = async (item: any) => {
   } catch (error) {
     console.error('打开文件失败:', error)
     alert('打开文件失败')
+  }
+}
+
+const handleOpenLocation = async (item: any) => {
+  try {
+    await openFileLocation(item.file_path)
+  } catch (error) {
+    console.error('打开目录失败:', error)
+    alert('打开目录失败')
   }
 }
 

@@ -38,6 +38,11 @@ export async function openFile(path: string): Promise<void> {
   return await invoke('open_file', { path })
 }
 
+// 打开文件所在目录
+export async function openFileLocation(path: string): Promise<void> {
+  return await invoke('open_file_location', { path })
+}
+
 // 删除文件
 export async function deleteFile(path: string): Promise<void> {
   return await invoke('delete_file', { path })

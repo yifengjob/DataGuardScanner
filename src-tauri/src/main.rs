@@ -107,6 +107,7 @@ fn main() {
             preview_file,
             cancel_preview,
             open_file,
+            open_file_location,
             delete_file,
             export_report,
             get_logs,

@@ -299,6 +299,43 @@ pub fn open_file(path: String) -> Result<(), String> {
     open::that(&path).map_err(|e| format!("无法打开文件: {}", e))
 }
 
+/// 打开文件所在目录
+#[tauri::command]
+pub fn open_file_location(path: String) -> Result<(), String> {
+    use std::path::Path;
+    
+    let path_obj = Path::new(&path);
+    let parent = path_obj.parent()
+        .ok_or_else(|| "无法获取文件所在目录".to_string())?;
+    
+    // 在不同平台上打开目录
+    #[cfg(target_os = "windows")]
+    {
+        // Windows: 使用 explorer /select 选中文件
+        std::process::Command::new("explorer")
+            .args(["/select,", &path])
+            .spawn()
+            .map_err(|e| format!("无法打开目录: {}", e))?;
+    }
+    
+    #[cfg(target_os = "macos")]
+    {
+        // macOS: 使用 open -R 选中文件
+        std::process::Command::new("open")
+            .args(["-R", &path])
+            .spawn()
+            .map_err(|e| format!("无法打开目录: {}", e))?;
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        // Linux: 使用 xdg-open 打开目录
+        open::that(parent).map_err(|e| format!("无法打开目录: {}", e))?;
+    }
+    
+    Ok(())
+}
+
 /// 删除文件（根据配置决定移入回收站或永久删除）
 #[tauri::command]
 pub fn delete_file(path: String) -> Result<(), String> {
