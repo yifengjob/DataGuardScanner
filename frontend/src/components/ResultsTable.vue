@@ -481,7 +481,7 @@ th.sortable:hover {
 }
 
 th.checkbox-col {
-  width: 2.5em;                      /* 40px - VS Code 风格 */
+  width: 3em;                        /* 48px - 增大宽度，避免被按钮遮挡 */
   text-align: center;
   cursor: default;
 }
@@ -519,7 +519,7 @@ td {
 }
 
 td.checkbox-col {
-  width: 2.5em;                      /* 40px */
+  width: 3em;                        /* 48px */
   text-align: center;
   overflow: visible;                 /* 复选框完整显示 */
   text-overflow: clip;
@@ -549,7 +549,8 @@ tr:hover {
 }
 
 .path-cell {
-  /* 文件名列使用默认样式，超出显示省略号 */
+  max-width: 25em;                   /* 400px - 限制最大宽度 */
+  min-width: 10em;                   /* 160px - 最小宽度 */
 }
 
 .size-cell, .number-cell, .total-cell {

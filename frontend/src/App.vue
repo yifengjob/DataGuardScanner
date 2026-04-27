@@ -452,7 +452,7 @@ const getThemeTooltip = () => {
   display: flex;
   flex-shrink: 0;
   position: relative; /* 为按钮提供定位上下文 */
-  width: 300px; /* 固定宽度 */
+  width: 300px; /* 固定宽度，与侧边栏一致 */
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -466,6 +466,7 @@ const getThemeTooltip = () => {
   height: 100%;
   border-right: 1px solid var(--border-color);
   overflow-y: auto;
+  overflow-x: hidden;                /* 防止横向滚动 */
   display: flex;
   flex-direction: column;
   background-color: var(--sidebar-bg);
@@ -480,13 +481,13 @@ const getThemeTooltip = () => {
   transform: translateX(-100%); /* 向左平移，完全隐藏 */
 }
 
-/* 折叠按钮 - 绝对定位，始终在容器右侧 */
+/* 折叠按钮 - 绝对定位，紧贴侧边栏右侧边缘 */
 .sidebar-toggle {
   position: absolute;
-  right: -0.75em;                    /* 12px */
+  right: -1em;                       /* 16px - 完全在侧边栏外部 */
   top: 50%;
   transform: translateY(-50%);
-  width: 1em;                        /* 16px */
+  width: 1em;                        /* 16px - 紧凑宽度 */
   height: 3.75em;                    /* 60px */
   display: flex;
   align-items: center;
@@ -500,7 +501,7 @@ const getThemeTooltip = () => {
   font-size: 0.75em;                 /* 12px */
   color: var(--text-secondary);
   transition: all 0.2s ease;
-  z-index: 100;
+  z-index: 10;
 }
 
 .sidebar-toggle:hover {
