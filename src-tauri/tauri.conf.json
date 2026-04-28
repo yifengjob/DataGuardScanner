@@ -43,7 +43,7 @@
     "longDescription": "A powerful tool for scanning and detecting sensitive data in files",
     "windows": {
       "webviewInstallMode": {
-        "type": "downloadBootstrapper"
+        "type": "skip"
       },
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
@@ -51,6 +51,9 @@
       "allowDowngrades": true,
       "wix": {
         "language": "zh-CN"
+      },
+      "nsis": {
+        "languages": ["SimpChinese"]
       }
     },
     "macOS": {
