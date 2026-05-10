@@ -171,7 +171,7 @@ const handleCopyContent = async () => {
 .modal-container {
   background-color: var(--modal-bg);
   color: var(--text-color);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);   /* 8px */
   width: min(80%, 900px);
   height: min(80%, 700px);
   min-width: 600px;
@@ -195,29 +195,29 @@ const handleCopyContent = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color);
+  padding: var(--spacing-lg) var(--spacing-xl);  /* 16px 20px */
+  border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .modal-header h3 {
-  font-size: 16px;
+  font-size: 1.1em;                  /* 16px */
   font-weight: 600;
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 28px;
+  font-size: 2em;                    /* 28px */
   cursor: pointer;
   color: #999;
   line-height: 1;
   transition: all 0.2s ease;
-  width: 32px;
-  height: 32px;
+  width: 2em;                        /* 32px */
+  height: 2em;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--radius-md);   /* 4px */
 }
 
 .close-btn:hover {
@@ -229,7 +229,7 @@ const handleCopyContent = async () => {
 .modal-body {
   flex: 1;
   overflow: auto;
-  padding: 20px;
+  padding: var(--spacing-xl);        /* 20px */
 }
 
 .error {
@@ -244,14 +244,14 @@ const handleCopyContent = async () => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 16px;
+  gap: var(--spacing-lg);            /* 16px */
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--border-color);
-  border-top: 4px solid var(--primary-color);
+  width: 2.5em;                      /* 40px */
+  height: 2.5em;
+  border: 0.25em solid var(--border-color);  /* 4px */
+  border-top: 0.25em solid var(--primary-color);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -262,13 +262,13 @@ const handleCopyContent = async () => {
 }
 
 .loading-text {
-  font-size: 16px;
+  font-size: 1.1em;                  /* 16px */
   color: var(--text-color);
   font-weight: 500;
 }
 
 .loading-hint {
-  font-size: 13px;
+  font-size: 0.9em;                  /* 13px */
   color: var(--text-secondary);
 }
 
@@ -278,16 +278,16 @@ const handleCopyContent = async () => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 12px;
+  gap: var(--spacing-md);            /* 12px */
   color: var(--error-color);
 }
 
 .error-icon {
-  font-size: 48px;
+  font-size: 3em;                    /* 48px */
 }
 
 .error-text {
-  font-size: 14px;
+  font-size: 0.95em;                 /* 14px */
   text-align: center;
   max-width: 80%;
 }
@@ -295,7 +295,7 @@ const handleCopyContent = async () => {
 .preview-content pre {
   margin: 0;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 13px;
+  font-size: 0.9em;                  /* 13px */
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -303,20 +303,20 @@ const handleCopyContent = async () => {
 
 .modal-footer {
   display: flex;
-  gap: 10px;
+  gap: var(--spacing-sm);            /* 10px */
   justify-content: flex-end;
-  padding: 12px 20px;
-  border-top: 1px solid var(--border-color);
+  padding: var(--spacing-md) var(--spacing-xl);  /* 12px 20px */
+  border-top: var(--border-width) solid var(--border-color);
 }
 
 .btn {
-  padding: 6px 16px;
-  border: 1px solid var(--border-color);
+  padding: 0.375em 1em;              /* 6px 16px */
+  border: var(--border-width) solid var(--border-color);
   background-color: var(--bg-color);
   color: var(--text-color);
-  border-radius: 4px;
+  border-radius: var(--radius-md);   /* 4px */
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.95em;                 /* 14px */
   transition: all 0.2s ease;
 }
 

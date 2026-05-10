@@ -143,29 +143,30 @@ const handleCollapseAll = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 0.5em 0.75em;                /* 8px 12px - 紧凑的表头 */
   background-color: var(--toolbar-bg);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .tree-header h3 {
-  font-size: 14px;
+  font-size: 0.95em;                 /* 接近基础字体 */
   font-weight: 600;
 }
 
 .tree-actions {
   display: flex;
-  gap: 5px;
+  gap: var(--spacing-xs);            /* 4px - 紧凑间距 */
 }
 
 .btn-small {
-  padding: 3px 8px;
-  font-size: 12px;
-  border: 1px solid var(--border-color);
+  padding: 0.1875em 0.5em;           /* 3px 8px - 紧凑按钮 */
+  font-size: 0.85em;                 /* 略小但可读 */
+  border: var(--border-width) solid var(--border-color);
   background-color: var(--bg-color);
   color: var(--text-color);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .btn-small:hover {
@@ -174,7 +175,8 @@ const handleCollapseAll = () => {
 
 .tree-content {
   flex: 1;
-  overflow: auto;  /* 同时支持水平和垂直滚动 */
-  padding: 8px;
+  overflow: auto;                    /* 同时支持水平和垂直滚动 */
+  padding: var(--spacing-sm);        /* 8px */
+  contain: layout style;             /* ← 限制重排范围 */
 }
 </style>

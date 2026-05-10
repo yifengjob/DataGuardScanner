@@ -1,0 +1,311 @@
+name: Build and Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows 64-bit
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            platform: windows-x64
+            args: ""
+          
+          # Windows 32-bit
+          - os: windows-latest
+            target: i686-pc-windows-msvc
+            platform: windows-x86
+            args: ""
+          
+          # Linux x86_64
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            platform: linux-x64
+            args: ""
+          
+          # Linux ARM64 (aarch64) - only build .deb and .rpm, skip AppImage due to linuxdeploy issues
+          - os: ubuntu-22.04
+            target: aarch64-unknown-linux-gnu
+            platform: linux-arm64
+            args: "--bundles deb rpm"
+          
+          # macOS Intel
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            platform: macos-intel
+            args: ""
+          
+          # macOS Apple Silicon (ARM)
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            platform: macos-arm
+            args: ""
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # Install pnpm first
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: latest
+          run_install: false
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      # Install Rust toolchain
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
+      # Setup QEMU for ARM builds
+      - name: Setup QEMU for ARM
+        if: matrix.platform == 'linux-arm64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      
+      # Configure cross-compilation environment for ARM64
+      - name: Configure ARM64 cross-compilation
+        if: matrix.platform == 'linux-arm64'
+        run: |
+          # Set up pkg-config for cross-compilation
+          echo "PKG_CONFIG_ALLOW_CROSS=1" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
+          
+          # Set up linker
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          
+          # Set library search paths
+          echo "LIBRARY_PATH=/usr/lib/aarch64-linux-gnu" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu" >> $GITHUB_ENV
+      
+      # Install Tauri CLI for portable build
+      - name: Install Tauri CLI
+        if: startsWith(matrix.platform, 'windows')
+        run: cargo install tauri-cli --version "^2.0.0"
+
+      # Install Linux dependencies
+      - name: Install Linux dependencies
+        if: startsWith(matrix.platform, 'linux')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            file \
+            desktop-file-utils \
+            libfuse2
+          
+          # Install cross-compilation tools and libraries for ARM64
+          if [ "${{ matrix.platform }}" = "linux-arm64" ]; then
+            echo "Installing ARM64 cross-compilation dependencies..."
+            sudo apt-get install -y \
+              gcc-aarch64-linux-gnu \
+              g++-aarch64-linux-gnu \
+              libc6-dev-arm64-cross
+          
+            # Configure APT for multiarch properly
+            sudo dpkg --add-architecture arm64
+          
+            # Remove or disable original sources to avoid conflicts
+            sudo mv /etc/apt/sources.list /etc/apt/sources.list.bak 2>/dev/null || true
+            sudo rm -f /etc/apt/sources.list.d/*.list 2>/dev/null || true
+          
+            # Create sources list for both amd64 (native) and arm64 (cross-compile)
+            # amd64 uses archive.ubuntu.com, arm64 uses ports.ubuntu.com
+            echo 'deb [arch=amd64] https://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/amd64-sources.list > /dev/null
+            echo 'deb [arch=amd64] https://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/amd64-sources.list > /dev/null
+            echo 'deb [arch=amd64] https://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/amd64-sources.list > /dev/null
+          
+            echo 'deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse' | sudo tee /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+            echo 'deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse' | sudo tee -a /etc/apt/sources.list.d/arm64-sources.list > /dev/null
+          
+            # Handle mirror configuration
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+                sudo mv /etc/apt/apt-mirrors.txt /etc/apt/apt-mirrors.txt.bak
+            fi
+          
+            # Debug: show sources configuration
+            echo "=== Sources List ==="
+            cat /etc/apt/sources.list.d/arm64-sources.list
+            echo "=== Architecture ==="
+            dpkg --print-architecture
+            dpkg --print-foreign-architectures
+          
+            sudo apt-get update
+          
+            # Install ARM64 versions of required libraries
+            sudo apt-get install -y \
+              libwebkit2gtk-4.1-dev:arm64 \
+              libgtk-3-dev:arm64 \
+              libsoup-3.0-dev:arm64 \
+              libjavascriptcoregtk-4.1-dev:arm64 \
+              libayatana-appindicator3-dev:arm64 \
+              librsvg2-dev:arm64 \
+              libpango1.0-dev:arm64 \
+              libcairo2-dev:arm64 \
+              libgdk-pixbuf-2.0-dev:arm64 \
+              libatk1.0-dev:arm64 \
+              libharfbuzz-dev:arm64
+          fi
+
+      # Cache Rust dependencies
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.target }}
+
+      # Cache Node modules (disabled to avoid stale cache issues)
+      # - name: Cache Node modules
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: frontend/node_modules
+      #     key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-pnpm-
+
+      # Install frontend dependencies
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          pnpm install
+
+      # Build Tauri app (installer version)
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: src-tauri
+          args: --target ${{ matrix.target }} ${{ matrix.args }}
+        continue-on-error: ${{ matrix.platform == 'linux-arm64' }}
+
+      # Build Windows portable EXE (additional)
+      - name: Build Windows Portable EXE
+        if: startsWith(matrix.platform, 'windows')
+        run: |
+          cd src-tauri
+          # Use cargo tauri build with --no-bundle to skip packaging and only generate EXE
+          cargo tauri build --target ${{ matrix.target }} --no-bundle
+
+      # Debug: List build outputs
+      - name: List build outputs
+        if: startsWith(matrix.platform, 'windows')
+        shell: pwsh
+        run: |
+          Write-Host "=== Checking target directory ==="
+          Get-ChildItem -Path "target/${{ matrix.target }}/release/" -Filter "*.exe" | Select-Object Name, Length
+          Write-Host "=== Checking if dataguard-scanner.exe exists ==="
+          Test-Path "target/${{ matrix.target }}/release/dataguard-scanner.exe"
+
+      # Upload artifacts
+      - name: Upload Windows artifacts
+        if: startsWith(matrix.platform, 'windows')
+        uses: actions/upload-artifact@v7
+        with:
+          name: dataguard-scanner-${{ matrix.platform }}
+          path: |
+            target/${{ matrix.target }}/release/bundle/nsis/*.exe
+            target/${{ matrix.target }}/release/bundle/msi/*.msi
+          if-no-files-found: error
+
+      - name: Upload Linux artifacts
+        if: startsWith(matrix.platform, 'linux')
+        uses: actions/upload-artifact@v7
+        with:
+          name: dataguard-scanner-${{ matrix.platform }}
+          path: |
+            target/${{ matrix.target }}/release/bundle/deb/*.deb
+            target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+            target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
+          if-no-files-found: ignore
+
+      - name: Upload macOS artifacts
+        if: startsWith(matrix.platform, 'macos')
+        uses: actions/upload-artifact@v7
+        with:
+          name: dataguard-scanner-${{ matrix.platform }}
+          path: |
+            target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+            target/${{ matrix.target }}/release/bundle/macos/*.app
+          if-no-files-found: error
+
+      # Upload Windows portable EXE separately
+      - name: Upload Windows Portable EXE
+        if: startsWith(matrix.platform, 'windows')
+        shell: pwsh
+        run: |
+          # Rename portable exe to include architecture
+          $targetDir = "target/${{ matrix.target }}/release"
+          $exeFile = Join-Path $targetDir "dataguard-scanner.exe"
+          if (Test-Path $exeFile) {
+            $arch = if ('${{ matrix.target }}' -match 'x86_64') { 'x64' } else { 'x86' }
+            $newName = "dataguard-scanner-${arch}-portable.exe"
+            Copy-Item $exeFile (Join-Path $targetDir $newName)
+            Write-Host "Renamed to: $newName"
+          }
+
+      - name: Upload Windows Portable EXE Artifact
+        if: startsWith(matrix.platform, 'windows')
+        uses: actions/upload-artifact@v7
+        with:
+          name: dataguard-scanner-${{ matrix.platform }}-portable
+          path: |
+            target/${{ matrix.target }}/release/dataguard-scanner-x64-portable.exe
+            target/${{ matrix.target }}/release/dataguard-scanner-x86-portable.exe
+          if-no-files-found: ignore
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: find artifacts -type f | head -50
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.msi
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
+            artifacts/**/*.dmg
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

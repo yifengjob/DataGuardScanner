@@ -19,20 +19,20 @@
       <button 
         class="btn btn-primary" 
         @click="handleStartScan"
-        :disabled="isScanning"
-        title="开始扫描选中的目录"
+        :disabled="isScanning || isStopping"
+        :title="isStopping ? '正在停止扫描，请稍候...' : '开始扫描选中的目录'"
       >
         <svg class="btn-icon"><use href="#icon-play" /></svg>
-        <span>{{ isScanning ? '扫描中...' : '开始扫描' }}</span>
+        <span>{{ isStopping ? '正在停止...' : (isScanning ? '扫描中...' : '开始扫描') }}</span>
       </button>
       <button 
         class="btn btn-danger" 
         @click="handleCancelScan"
-        :disabled="!isScanning"
-        title="取消当前扫描任务"
+        :disabled="!isScanning || isStopping"
+        :title="isStopping ? '正在停止扫描，请稍候...' : '取消当前扫描任务'"
       >
         <svg class="btn-icon"><use href="#icon-pause" /></svg>
-        <span>取消</span>
+        <span>{{ isStopping ? '停止中...' : '取消' }}</span>
       </button>
       <button 
         class="btn btn-icon-only" 
@@ -92,11 +92,24 @@
 
     <!-- 状态栏 -->
     <div class="status-bar">
-      <span>{{ isScanning ? '扫描中...' : '就绪' }}</span>
-      <span>已扫描 {{ scannedCount }} 个文件</span>
-      <span>非文档类型文件 {{ errorCount }} 个</span>
-      <span>敏感文件 {{ sensitiveFilesCount }} 个</span>
-      <span>敏感信息 {{ totalSensitiveItems.toLocaleString() }} 条</span>
+      <span class="status-item status-state">
+        {{ isStopping ? '⏹️ 正在停止...' : (isScanning ? '🔄 扫描中...' : '✅ 就绪') }}
+      </span>
+      <span class="status-item">
+        📁 已扫描: {{ scannedCount.toLocaleString() }} / {{ totalFiles.toLocaleString() }}
+      </span>
+      <span class="status-item">
+        ⚠️ 错误: {{ errorCount }}
+      </span>
+      <span class="status-item">
+        🔍 敏感文件: {{ sensitiveFilesCount }}
+      </span>
+      <span class="status-item">
+        📊 敏感项: {{ totalSensitiveItems.toLocaleString() }}
+      </span>
+      <span class="status-item status-time">
+        ⏱️ 耗时: {{ elapsedTime }}
+      </span>
     </div>
 
     <!-- 预览弹窗 -->
@@ -149,7 +162,7 @@ import type { ThemeMode } from './utils/theme'
 // 插件会自动将 src/assets 下的 SVG 转换为 sprite
 
 const appStore = useAppStore()
-const { isScanning, scannedCount, sensitiveFilesCount, errorCount, totalSensitiveItems, config, scanResults } = storeToRefs(appStore)
+const { isScanning, scannedCount, totalFiles, sensitiveFilesCount, errorCount, totalSensitiveItems, elapsedTime, config, scanResults } = storeToRefs(appStore)
 
 const showPreview = ref(false)
 const previewFilePath = ref('')
@@ -159,6 +172,7 @@ const showAbout = ref(false)
 const showExport = ref(false)
 const isSidebarCollapsed = ref(false)
 const currentTheme = ref<ThemeMode>('system')
+const isStopping = ref(false) // 【新增】正在停止扫描状态
 
 // 加载配置
 onMounted(async () => {
@@ -181,23 +195,57 @@ onMounted(async () => {
   })
   
   // 监听扫描事件
+  // 【优化】批量收集扫描结果，减少渲染次数
+  let resultBuffer: typeof scanResults.value = []
+  let flushTimer: number | null = null
+  
+  const flushResults = () => {
+    if (resultBuffer.length > 0) {
+      resultBuffer.forEach(item => appStore.addScanResult(item))
+      resultBuffer = []
+    }
+  }
+  
   await onScanProgress((data) => {
     scannedCount.value = data.scanned_count
+    totalFiles.value = data.total_count || 0 // 【新增】更新文件总数
     appStore.currentFile = data.current_file
   })
   
   await onScanResult((item) => {
-    appStore.addScanResult(item)
+    // 【优化】缓冲结果，每 100ms 或积累 50 个后批量更新
+    resultBuffer.push(item)
+    
+    if (!flushTimer && resultBuffer.length >= 50) {
+      // 积累足够多，立即刷新
+      flushResults()
+    } else if (!flushTimer) {
+      // 设置定时器，100ms 后刷新
+      flushTimer = window.setTimeout(() => {
+        flushResults()
+        flushTimer = null
+      }, 100)
+    }
   })
   
   await onScanFinished(() => {
     console.log('扫描完成')
+    // 【优化】确保所有缓冲的结果都被刷新
+    if (flushTimer) {
+      clearTimeout(flushTimer)
+      flushTimer = null
+    }
+    flushResults()
+    
     isScanning.value = false
+    isStopping.value = false // 【新增】重置停止状态
+    appStore.scanStartTime = null // 【新增】重置开始时间
   })
   
   await onScanError(async (error) => {
     console.error('扫描错误:', error)
     isScanning.value = false
+    isStopping.value = false // 【新增】重置停止状态
     await message(`扫描出错: ${error}`, {
       title: '错误',
       kind: 'error',
@@ -222,6 +270,16 @@ const handleStartScan = async () => {
     return
   }
   
+  // 【新增】如果正在停止，不允许开始
+  if (isStopping.value) {
+    await message('正在停止扫描，请稍候...', {
+      title: '提示',
+      kind: 'warning',
+      buttons: {ok: '确定'},
+    })
+    return
+  }
+  
   // 获取有效的扫描路径（只保留叶子节点）
   const effectivePaths = appStore.getEffectiveScanPaths()
   console.log('开始扫描，选中的路径:', Array.from(appStore.selectedPaths))
@@ -232,6 +290,8 @@ const handleStartScan = async () => {
   appStore.clearScanResults()
   appStore.logs = [] // 清空旧日志
   isScanning.value = true
+  isStopping.value = false // 【新增】重置停止状态
+  appStore.scanStartTime = Date.now() // 【新增】记录扫描开始时间
   
   const scanConfig = {
     selected_paths: effectivePaths,
@@ -249,16 +309,20 @@ const handleStartScan = async () => {
   } catch (error) {
     console.error('启动扫描失败:', error)
     isScanning.value = false
+    isStopping.value = false // 【新增】重置停止状态
   }
 }
 
 // 取消扫描
 const handleCancelScan = async () => {
   try {
+    isStopping.value = true // 【新增】设置停止状态
     await cancelScan()
-    isScanning.value = false
+    // 注意：不立即设置 isScanning = false，等待后端发送 scan-finished 事件
+    console.log('已请求取消扫描，等待线程停止...')
   } catch (error) {
     console.error('取消扫描失败:', error)
+    isStopping.value = false // 【新增】重置停止状态
   }
 }
 
@@ -316,6 +380,8 @@ const getThemeTooltip = () => {
   flex-direction: column;
   height: 100vh;
   width: 100vw;
+  will-change: auto;                 /* ← 优化整体布局 */
+  contain: layout style;             /* ← 限制重排范围 */
 }
 
 .menu-bar {
@@ -324,6 +390,7 @@ const getThemeTooltip = () => {
   padding: 0.375em 1em;              /* 6px 16px - 紧凑的菜单栏 */
   background-color: var(--menu-bg);
   border-bottom: var(--border-width) solid var(--border-color);
+  contain: layout style;             /* ← 限制重排范围 */
 }
 
 .menu-item {
@@ -350,6 +417,7 @@ const getThemeTooltip = () => {
   padding: 0.5em 1em;                /* 8px 16px - 工具栏内边距 */
   background-color: var(--toolbar-bg);
   border-bottom: var(--border-width) solid var(--border-color);
+  contain: layout style;             /* ← 限制重排范围 */
 }
 
 .btn {
@@ -445,6 +513,7 @@ const getThemeTooltip = () => {
   display: flex;
   flex: 1;
   overflow: hidden;
+  contain: layout style;             /* ← 限制重排范围 */
 }
 
 /* 左侧区域容器 */
@@ -453,7 +522,7 @@ const getThemeTooltip = () => {
   flex-shrink: 0;
   position: relative; /* 为按钮提供定位上下文 */
   width: 300px; /* 固定宽度，与侧边栏一致 */
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);  /* ← 恢复动画 */
 }
 
 .sidebar-area.collapsed {
@@ -473,7 +542,7 @@ const getThemeTooltip = () => {
   position: absolute; /* 绝对定位，脱离文档流 */
   left: 0;
   top: 0;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);  /* ← 恢复动画 */
   transform: translateX(0);
 }
 
@@ -500,8 +569,9 @@ const getThemeTooltip = () => {
   user-select: none;
   font-size: 0.75em;                 /* 12px */
   color: var(--text-secondary);
-  transition: all 0.2s ease;
+  transition: all 0.2s ease;  /* ← 恢复动画 */
   z-index: 100;                      /* 高于所有表格固定列 */
+  contain: layout style;             /* ← 限制重排范围 */
 }
 
 .sidebar-toggle:hover {
@@ -513,16 +583,33 @@ const getThemeTooltip = () => {
 .results-panel {
   flex: 1;
   overflow: hidden;
+  contain: layout style paint;       /* ← 限制重排范围 */
 }
 
 .status-bar {
   display: flex;
-  gap: 30px;
-  padding: 6px 16px;
+  gap: 20px;
+  padding: 8px 16px;
   background-color: var(--menu-bg);
   border-top: 1px solid var(--border-color);
   font-size: 13px;
   color: var(--text-secondary);
+  contain: layout style;             /* ← 限制重排范围 */
+}
+
+.status-item {
+  white-space: nowrap;
+  user-select: none;
+}
+
+.status-state {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.status-time {
+  margin-left: auto; /* 将耗时推到最右侧 */
+  font-family: 'Consolas', 'Monaco', monospace;
 }
 
 /* 模态框过渡动画 */

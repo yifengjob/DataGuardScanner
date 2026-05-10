@@ -9,8 +9,10 @@ export const useAppStore = defineStore('app', () => {
   // 扫描状态
   const isScanning = ref(false)
   const scannedCount = ref(0)
+  const totalFiles = ref(0) // 【新增】文件总数
   const currentFile = ref('')
   const logs = ref<string[]>([])
+  const scanStartTime = ref<number | null>(null) // 【新增】扫描开始时间
   
   // 配置
   const config = ref<AppConfig>({
@@ -46,6 +48,26 @@ export const useAppStore = defineStore('app', () => {
   const totalSensitiveItems = computed(() => 
     scanResults.value.reduce((sum, item) => sum + item.total, 0)
   )
+  
+  // 【新增】计算扫描耗时
+  const elapsedTime = computed(() => {
+    if (!scanStartTime.value) return '0s'
+    
+    const elapsed = Date.now() - scanStartTime.value
+    const seconds = Math.floor(elapsed / 1000)
+    
+    if (seconds < 60) {
+      return `${seconds}s`
+    } else if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60)
+      const secs = seconds % 60
+      return `${minutes}m${secs}s`
+    } else {
+      const hours = Math.floor(seconds / 3600)
+      const minutes = Math.floor((seconds % 3600) / 60)
+      return `${hours}h${minutes}m`
+    }
+  })
   
   // 获取节点的选择状态：'checked' | 'unchecked' | 'indeterminate'
   function getNodeCheckState(nodePath: string, allNodes: Map<string, DirectoryNode>): 'checked' | 'unchecked' | 'indeterminate' {
@@ -101,7 +123,9 @@ export const useAppStore = defineStore('app', () => {
   function clearScanResults() {
     scanResults.value = []
     scannedCount.value = 0
+    totalFiles.value = 0 // 【新增】重置文件总数
     logs.value = []
+    scanStartTime.value = null // 【新增】重置开始时间
   }
   
   function removeResult(filePath: string) {
@@ -200,6 +224,7 @@ export const useAppStore = defineStore('app', () => {
     scanResults,
     isScanning,
     scannedCount,
+    totalFiles, // 【新增】
     currentFile,
     logs,
     config,
@@ -207,6 +232,8 @@ export const useAppStore = defineStore('app', () => {
     sensitiveFilesCount,
     errorCount,
     totalSensitiveItems,
+    elapsedTime, // 【新增】
+    scanStartTime, // 【新增】
     addScanResult,
     clearScanResults,
     removeResult,

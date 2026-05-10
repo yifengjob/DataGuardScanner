@@ -9,6 +9,7 @@ use crate::models::*;
 use crate::scanner::{run_scan_safe, ScanEvent};
 use crate::file_parser::extract_text_from_file;
 use crate::sensitive_detector::{get_highlights, get_builtin_rules};
+use crate::config;
 
 lazy_static! {
     /// 预览任务取消标志（只保留最新的）
@@ -100,8 +101,8 @@ pub async fn scan_start(
     
     let cancel_flag = state.cancel_flag.clone();
     
-    // 创建事件通道
-    let (tx, mut rx) = mpsc::channel::<ScanEvent>(100);
+    // 创建事件通道（增加缓冲区，避免阻塞）
+    let (tx, mut rx) = mpsc::channel::<ScanEvent>(config::EVENT_CHANNEL_BUFFER_SIZE);
     
     // 启动扫描任务
     let app_clone_for_error = app.clone();
@@ -121,8 +122,20 @@ pub async fn scan_start(
         let mut received_finished = false;
         
         // 设置超时，防止永远等待
-        let timeout_duration = std::time::Duration::from_secs(3600); // 1小时超时
+        let timeout_duration = std::time::Duration::from_secs(config::SCAN_TIMEOUT_SECS);
         let start_time = std::time::Instant::now();
+        
+        // 【优化】日志节流：记录上次发送时间
+        let mut last_log_time = std::time::Instant::now();
+        let log_throttle = std::time::Duration::from_millis(config::LOG_THROTTLE_MS);
+        
+        // 【新增】停滞检测：跟踪最后活动时间
+        let mut last_activity_time = std::time::Instant::now();
+        let warning_threshold = std::time::Duration::from_secs(config::STAGNATION_WARNING_THRESHOLD_SECS);
+        let force_stop_threshold = std::time::Duration::from_secs(config::STAGNATION_FORCE_STOP_THRESHOLD_SECS);
+        
+        // 【新增】创建停滞检测定时器
+        let mut stagnation_timer = tokio::time::interval(std::time::Duration::from_secs(config::STAGNATION_CHECK_INTERVAL_SECS));
         
         loop {
             // 检查超时
@@ -136,7 +149,39 @@ pub async fn scan_start(
             }
             
             tokio::select! {
+                // 【新增】停滞检测定时器
+                _ = stagnation_timer.tick() => {
+                    let now = std::time::Instant::now();
+                    let idle_time = now.duration_since(last_activity_time);
+                    
+                    // 检查是否有任何实质性进展（对比状态快照）
+                    // 由于我们已经在收到事件时更新了 last_activity_time
+                    // 所以这里只需要检查 idle_time 即可
+                    
+                    if idle_time > warning_threshold {
+                        // 第一层：短时间停滞警告
+                        if idle_time <= force_stop_threshold {
+                            log::warn!("警告: {}秒内无任何进展，扫描可能卡住", idle_time.as_secs());
+                            let _ = app_clone.emit("scan-log", format!("⚠️ 警告: {}秒内无进展，正在监控...", idle_time.as_secs()));
+                        }
+                        
+                        // 第二层：长时间停滞强制结束
+                        if idle_time > force_stop_threshold {
+                            log::error!("错误: {}秒内无任何进展，强制结束扫描", idle_time.as_secs());
+                            let _ = app_clone.emit("scan-log", format!("❌ 错误: {}秒内无进展，强制结束", idle_time.as_secs()));
+                            
+                            if let Ok(mut is_scanning) = is_scanning_clone.lock() {
+                                *is_scanning = false;
+                            }
+                            let _ = app_clone.emit("scan-error", format!("扫描停滞超过{}秒，已强制结束", force_stop_threshold.as_secs()));
+                            break;
+                        }
+                    }
+                }
                 Some(event) = rx.recv() => {
+                    // 【新增】更新最后活动时间
+                    last_activity_time = std::time::Instant::now();
+                    
                     match event {
                         ScanEvent::Progress { current_file, scanned_count, total_count } => {
                             let _ = app_clone.emit("scan-progress", serde_json::json!({
@@ -149,8 +194,29 @@ pub async fn scan_start(
                             let _ = app_clone.emit("scan-result", item);
                         }
                         ScanEvent::Log(msg) => {
-                            logs_clone.lock().map(|mut l| l.push(msg.clone())).ok();
-                            let _ = app_clone.emit("scan-log", msg);
+                            // 【优化】日志节流，但允许连续日志快速通过（初始阶段）
+                            let now = std::time::Instant::now();
+                            let time_since_last = now.duration_since(last_log_time);
+                            
+                            // 如果是刚开始扫描（3秒内），或者距离上次日志超过 100ms，则发送
+                            let is_initial_phase = start_time.elapsed() < std::time::Duration::from_secs(config::INITIAL_LOG_PHASE_SECS);
+                            if is_initial_phase || time_since_last >= log_throttle {
+                                let _ = app_clone.emit("scan-log", msg.clone());
+                                last_log_time = now;
+                            }
+                            
+                            // 【优化】异步添加日志到内存，避免阻塞
+                            let logs_clone_inner = logs_clone.clone();
+                            tokio::spawn(async move {
+                                if let Ok(mut l) = logs_clone_inner.lock() {
+                                    l.push(msg);
+                                    // 限制日志数量，防止内存泄漏
+                                    let len = l.len();
+                                    if len > config::MAX_LOG_ENTRIES {
+                                        l.drain(0..len - config::MAX_LOG_ENTRIES);
+                                    }
+                                }
+                            });
                         }
                         ScanEvent::Finished => {
                             log::info!("扫描完成，重置状态");
@@ -208,7 +274,7 @@ pub fn cancel_preview() -> Result<bool, String> {
 /// 预览文件
 #[tauri::command]
 pub async fn preview_file(path: String, max_bytes: Option<usize>) -> Result<PreviewResult, String> {
-    let max_bytes = max_bytes.unwrap_or(200 * 1024); // 默认 200KB
+    let max_bytes = max_bytes.unwrap_or(config::DEFAULT_PREVIEW_MAX_BYTES); // 默认 200KB
     
     log::debug!("开始预览任务");
     
@@ -542,7 +608,10 @@ pub fn load_config() -> Result<AppConfig, String> {
     let config_path = get_config_path()?;
     
     if !Path::new(&config_path).exists() {
-        return Ok(AppConfig::default());
+        // 【新增】首次运行时，使用当前平台的系统目录
+        let mut default_config = AppConfig::default();
+        default_config.system_dirs = crate::system_dirs::generate_system_dirs(false);
+        return Ok(default_config);
     }
     
     let content = std::fs::read_to_string(&config_path)
@@ -551,9 +620,9 @@ pub fn load_config() -> Result<AppConfig, String> {
     let mut config: AppConfig = serde_json::from_str(&content)
         .map_err(|e| format!("解析配置失败: {}", e))?;
     
-    // 配置迁移：如果 system_dirs 为空，使用默认值
+    // 配置迁移：如果 system_dirs 为空，使用当前平台的默认值
     if config.system_dirs.is_empty() {
-        config.system_dirs = AppConfig::default().system_dirs;
+        config.system_dirs = crate::system_dirs::generate_system_dirs(false);
     }
     
     Ok(config)
@@ -598,4 +667,19 @@ fn is_writable(path: &Path) -> bool {
 #[tauri::command]
 pub fn check_system_environment() -> Result<crate::environment::EnvironmentCheck, String> {
     Ok(crate::environment::check_environment())
+}
+
+/// 获取推荐的并发数（根据 CPU 和内存智能计算）
+#[tauri::command]
+pub fn get_recommended_concurrency() -> Result<serde_json::Value, String> {
+    use crate::concurrency::calculate_recommended_concurrency;
+    
+    let info = calculate_recommended_concurrency();
+    
+    Ok(serde_json::json!({
+        "recommended": info.actual_concurrency,
+        "max_allowed": info.max_allowed_concurrency,
+        "cpu_count": info.cpu_count,
+        "free_memory_gb": format!("{:.1}", info.free_memory_gb)
+    }))
 }

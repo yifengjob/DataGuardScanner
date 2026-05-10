@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::config;
 use std::collections::HashMap;
 
 /// 目录树节点
@@ -84,77 +85,23 @@ pub struct AppConfig {
 
 impl Default for AppConfig {
     fn default() -> Self {
-        // 基础忽略目录（所有平台通用，任意位置都忽略）
-        let ignore_dir_names = vec![
-            // 开发相关
-            "node_modules".to_string(),
-            ".git".to_string(),
-            ".svn".to_string(),
-            ".hg".to_string(),
-            ".vscode".to_string(),
-            ".idea".to_string(),
-            
-            // 特殊系统目录（名称独特，不会冲突）
-            "System Volume Information".to_string(),
-            ".Spotlight-V100".to_string(),
-            ".fseventsd".to_string(),
-            ".DS_Store".to_string(),
-            "lost+found".to_string(),
-        ];
+        // 【优化】使用常量定义忽略目录
+        let ignore_dir_names = config::IGNORE_DIR_NAMES.iter().map(|s| s.to_string()).collect();
         
-        // 系统目录（完整路径，只在特定位置忽略）
-        let system_dirs = if cfg!(target_os = "windows") {
-            vec![
-                "C:\\Windows".to_string(),
-                "C:\\Program Files".to_string(),
-                "C:\\Program Files (x86)".to_string(),
-                "C:\\ProgramData".to_string(),
-                "C:\\Recovery".to_string(),
-                "C:\\PerfLogs".to_string(),
-            ]
-        } else if cfg!(target_os = "macos") {
-            vec![
-                "/Applications".to_string(),
-                "/Library".to_string(),
-                "/System".to_string(),
-            ]
-        } else if cfg!(target_os = "linux") {
-            vec![
-                "/proc".to_string(),
-                "/sys".to_string(),
-                "/dev".to_string(),
-                "/run".to_string(),
-                "/tmp".to_string(),
-                "/var".to_string(),
-                "/etc".to_string(),
-                "/bin".to_string(),
-                "/sbin".to_string(),
-                "/lib".to_string(),
-                "/usr".to_string(),
-                "/boot".to_string(),
-                "/mnt".to_string(),
-                "/media".to_string(),
-                "/opt".to_string(),
-                "/srv".to_string(),
-            ]
-        } else {
-            vec![]
-        };
+        // 【优化】使用 system_dirs 模块生成跨平台系统目录
+        let system_dirs = crate::system_dirs::generate_system_dirs(false);
         
         Self {
             selected_paths: vec![],
             // 默认选中"*"表示所有文件类型
             selected_extensions: vec!["*".to_string()],
-            enabled_sensitive_types: vec![
-                "person_id".to_string(), "phone".to_string(), "email".to_string(),
-                "bank_card".to_string(), "address".to_string(), "ip_address".to_string(),
-                "password".to_string(),
-            ],
+            // 【优化】使用常量定义默认敏感检测类型
+            enabled_sensitive_types: config::DEFAULT_SENSITIVE_TYPES.iter().map(|s| s.to_string()).collect(),
             ignore_dir_names,
             system_dirs,
-            max_file_size_mb: 50,
-            max_pdf_size_mb: 100,
-            scan_concurrency: 8,
+            max_file_size_mb: config::DEFAULT_MAX_FILE_SIZE_MB,
+            max_pdf_size_mb: config::DEFAULT_MAX_PDF_SIZE_MB,
+            scan_concurrency: config::DEFAULT_CONCURRENCY_MAX,
             theme: "system".to_string(),
             language: "zh-CN".to_string(),
             enable_experimental_parsers: false,

@@ -6,6 +6,9 @@ mod file_parser;
 mod sensitive_detector;
 mod commands;
 mod environment;
+mod concurrency;
+mod system_dirs;
+mod config; // 【新增】配置常量模块
 
 use commands::*;
 use environment::check_environment;
@@ -116,6 +119,7 @@ fn main() {
             save_config,
             load_config,
             check_system_environment,
+            get_recommended_concurrency, // 【新增】获取推荐并发数
         ])
         .setup(|app| {
             // 动态计算窗口大小
@@ -130,12 +134,12 @@ fn main() {
                     let logical_width = size.width as f64 / scale_factor;
                     let logical_height = size.height as f64 / scale_factor;
                     
-                    let width = (logical_width * 0.8) as u32;
-                    let height = (logical_height * 0.8) as u32;
+                    let width = (logical_width * config::WINDOW_TARGET_RATIO) as u32;
+                    let height = (logical_height * config::WINDOW_TARGET_RATIO) as u32;
                     
                     // 确保最小尺寸（逻辑像素）
-                    let width = width.max(1000);
-                    let height = height.max(600);
+                    let width = width.max(config::WINDOW_MIN_WIDTH);
+                    let height = height.max(config::WINDOW_MIN_HEIGHT);
                     
                     log::info!("屏幕物理尺寸: {}x{}, 逻辑尺寸: {:.0}x{:.0}, 缩放比例: {}, 窗口尺寸: {}x{}", 
                                size.width, size.height, logical_width, logical_height, scale_factor, width, height);
@@ -149,7 +153,7 @@ fn main() {
                     // 延迟一小段时间再居中，确保窗口大小已生效
                     let window_clone = window.clone();
                     tauri::async_runtime::spawn(async move {
-                        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                        tokio::time::sleep(std::time::Duration::from_millis(config::WINDOW_CENTER_DELAY_MS)).await;
                         let _ = window_clone.center();
                     });
                 }

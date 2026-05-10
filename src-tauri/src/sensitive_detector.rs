@@ -52,7 +52,7 @@ lazy_static! {
             id: "address",
             name: "地址",
             // 极其严格的地址匹配：必须是真实的中国行政区划格式
-            // 核心要求：必须包含"XX路/街/道"或"XX号"等明确地址标识
+            // 核心要求：必须包含“XX路/街/道”或“XX号”等明确地址标识
             // 模式1: XX省XX市XX区XX路XX号
             // 模式2: XX市XX区XX路XX号
             // 模式3: XX市XX县XX镇
@@ -74,6 +74,17 @@ lazy_static! {
             enabled_by_default: true,
         },
     ];
+    
+    /// 【优化】缓存编译后的正则表达式，避免重复编译
+    static ref COMPILED_REGEXES: HashMap<&'static str, Regex> = {
+        let mut map = HashMap::new();
+        for rule in BUILTIN_RULES.iter() {
+            if let Ok(regex) = Regex::new(rule.pattern) {
+                map.insert(rule.id, regex);
+            }
+        }
+        map
+    };
 }
 
 struct SensitiveRuleDef {
@@ -90,8 +101,31 @@ pub fn get_builtin_rules() -> Vec<(String, String, bool)> {
         .collect()
 }
 
-/// Luhn 算法校验银行卡号
+/// 【优化】Luhn 算法校验银行卡号
 fn luhn_check(card_number: &str) -> bool {
+    // 【优化】先检查卡 BIN（快速失败）
+    // 银联借记卡：62开头
+    // 银联信用卡：62、60开头
+    // Visa：4开头
+    // MasterCard：51-55或2开头
+    let bytes = card_number.as_bytes();
+    if bytes.len() < 2 {
+        return false;
+    }
+    
+    let has_valid_bin = match (bytes[0], bytes.get(1)) {
+        (b'6', Some(b'2')) | (b'6', Some(b'0')) => true,  // 银联
+        (b'4', _) => true,  // Visa
+        (b'5', Some(b'1'..=b'5')) => true,  // MasterCard 51-55
+        (b'2', Some(b'2'..=b'7')) => true,  // MasterCard 2系列
+        _ => false,
+    };
+    
+    if !has_valid_bin {
+        return false;  // 快速失败
+    }
+    
+    // Luhn算法校验
     let mut sum = 0;
     let mut double = false;
     
@@ -114,7 +148,7 @@ fn luhn_check(card_number: &str) -> bool {
     sum % 10 == 0
 }
 
-/// 校验中国身份证号
+/// 校验中国身份证号（完整版）
 fn validate_person_id(id: &str) -> bool {
     // 必须是18位
     if id.len() != 18 {
@@ -193,6 +227,91 @@ fn validate_person_id(id: &str) -> bool {
     actual_check_code == expected_check_code as u8
 }
 
+/// 【优化】快速校验身份证号（简化版，用于高性能场景）
+fn validate_person_id_fast(id: &str) -> bool {
+    // 快速失败：长度检查
+    if id.len() != 18 {
+        return false;
+    }
+    
+    // 快速失败：字符检查
+    if !id[..17].chars().all(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    let last_char = id.as_bytes()[17];
+    if !last_char.is_ascii_digit() && last_char != b'X' && last_char != b'x' {
+        return false;
+    }
+    
+    // 简化日期验证：只检查基本范围，不精确到每月天数
+    let month: u32 = match id[10..12].parse() {
+        Ok(m) => m,
+        Err(_) => return false,
+    };
+    let day: u32 = match id[12..14].parse() {
+        Ok(d) => d,
+        Err(_) => return false,
+    };
+    
+    // 基本范围检查（比完整版快）
+    if !(1..=12).contains(&month) {
+        return false;
+    }
+    if !(1..=31).contains(&day) {
+        return false;
+    }
+    
+    // 只验证校验码（最关键的部分）
+    validate_check_code_only(id)
+}
+
+/// 仅验证身份证校验码（最关键的验证）
+fn validate_check_code_only(id: &str) -> bool {
+    let bytes = id.as_bytes();
+    let weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+    let check_codes = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
+    
+    let mut sum = 0;
+    for (i, &byte) in bytes.iter().take(17).enumerate() {
+        let digit = byte - b'0';
+        sum += (digit as u32) * weights[i];
+    }
+    
+    let mod_result = (sum % 11) as usize;
+    let expected_check_code = check_codes[mod_result];
+    let actual_check_code = bytes[17].to_ascii_uppercase();
+    
+    actual_check_code == expected_check_code as u8
+}
+
+/// 【优化】校验 IP 地址（增加前导零检查）
+fn validate_ip_address(ip: &str) -> bool {
+    let parts: Vec<&str> = ip.split('.').collect();
+    if parts.len() != 4 {
+        return false;
+    }
+    
+    for part in parts {
+        // 检查是否为空
+        if part.is_empty() {
+            return false;
+        }
+        
+        // 【优化】检查前导零（除了"0"本身）
+        if part.len() > 1 && part.starts_with('0') {
+            return false;
+        }
+        
+        // 解析数字并检查范围
+        match part.parse::<u32>() {
+            Ok(num) if num <= 255 => continue,
+            _ => return false,
+        }
+    }
+    
+    true
+}
+
 /// 检测文本中的敏感数据
 pub fn detect_sensitive_data(text: &str, enabled_types: &[String]) -> HashMap<String, u32> {
     let mut counts = HashMap::new();
@@ -202,39 +321,39 @@ pub fn detect_sensitive_data(text: &str, enabled_types: &[String]) -> HashMap<St
             continue;
         }
         
-        if let Ok(regex) = Regex::new(rule.pattern) {
-            let match_count = regex.find_iter(text).filter(|mat| {
-                // 对于手机号、银行卡号和身份证号，需要确保前后不是数字
-                if rule.id == "phone" || rule.id == "bank_card" || rule.id == "person_id" {
-                    let start = mat.start();
-                    let end = mat.end();
-                    
-                    // 检查前面是否有数字
-                    let prev_is_digit = start > 0 && text[..start].chars().last()
-                        .is_some_and(|c| c.is_ascii_digit());
-                    
-                    // 检查后面是否有数字
-                    let next_is_digit = end < text.len() && text[end..].chars().next()
-                        .is_some_and(|c| c.is_ascii_digit());
-                    
-                    // 如果前后都不是数字，才是有效匹配
-                    if prev_is_digit || next_is_digit {
-                        return false;
+        // 【优化】使用缓存的正则表达式，避免重复编译
+        if let Some(regex) = COMPILED_REGEXES.get(rule.id) {
+            let match_count = regex.find_iter(text)
+                .take(1000)  // 【优化】限制最大匹配数，防止灾难性回溯
+                .filter(|mat| {
+                    // 对于手机号、银行卡号和身份证号，需要确保前后不是数字
+                    if rule.id == "phone" || rule.id == "bank_card" || rule.id == "person_id" {
+                        let start = mat.start();
+                        let end = mat.end();
+                        
+                        // 【优化】使用字节访问，比 chars() 快
+                        let prev_is_digit = start > 0 && text.as_bytes()[start - 1].is_ascii_digit();
+                        let next_is_digit = end < text.len() && text.as_bytes()[end].is_ascii_digit();
+                        
+                        // 如果前后都不是数字，才是有效匹配
+                        if prev_is_digit || next_is_digit {
+                            return false;
+                        }
+                        
+                        // 对于银行卡号，还需要Luhn校验
+                        if rule.id == "bank_card" {
+                            return luhn_check(mat.as_str());
+                        }
+                        
+                        // 对于身份证号，需要验证日期和校验码
+                        if rule.id == "person_id" {
+                            return validate_person_id_fast(mat.as_str());
+                        }
                     }
                     
-                    // 对于银行卡号，还需要Luhn校验
-                    if rule.id == "bank_card" {
-                        return luhn_check(mat.as_str());
-                    }
-                    
-                    // 对于身份证号，需要验证日期和校验码
-                    if rule.id == "person_id" {
-                        return validate_person_id(mat.as_str());
-                    }
-                }
-                
-                true
-            }).count() as u32;
+                    true
+                })
+                .count() as u32;
             
             if match_count > 0 {
                 counts.insert(rule.id.to_string(), match_count);
@@ -254,20 +373,17 @@ pub fn get_highlights(text: &str, enabled_types: &[String]) -> Vec<(usize, usize
             continue;
         }
         
-        if let Ok(regex) = Regex::new(rule.pattern) {
-            for mat in regex.find_iter(text) {
+        // 【优化】使用缓存的正则表达式
+        if let Some(regex) = COMPILED_REGEXES.get(rule.id) {
+            for mat in regex.find_iter(text).take(1000) {  // 【优化】限制匹配数
                 // 对于手机号、银行卡号和身份证号，需要确保前后不是数字
                 if rule.id == "phone" || rule.id == "bank_card" || rule.id == "person_id" {
                     let start = mat.start();
                     let end = mat.end();
                     
-                    // 检查前面是否有数字
-                    let prev_is_digit = start > 0 && text[..start].chars().last()
-                        .is_some_and(|c| c.is_ascii_digit());
-                    
-                    // 检查后面是否有数字
-                    let next_is_digit = end < text.len() && text[end..].chars().next()
-                        .is_some_and(|c| c.is_ascii_digit());
+                    // 【优化】使用字节访问，比 chars() 快
+                    let prev_is_digit = start > 0 && text.as_bytes()[start - 1].is_ascii_digit();
+                    let next_is_digit = end < text.len() && text.as_bytes()[end].is_ascii_digit();
                     
                     // 如果前后有数字，跳过
                     if prev_is_digit || next_is_digit {
@@ -279,8 +395,8 @@ pub fn get_highlights(text: &str, enabled_types: &[String]) -> Vec<(usize, usize
                         continue;
                     }
                     
-                    // 对于身份证号，需要验证日期和校验码
-                    if rule.id == "person_id" && !validate_person_id(mat.as_str()) {
+                    // 对于身份证号，使用快速验证
+                    if rule.id == "person_id" && !validate_person_id_fast(mat.as_str()) {
                         continue;
                     }
                 }

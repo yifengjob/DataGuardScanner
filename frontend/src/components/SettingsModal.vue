@@ -134,7 +134,7 @@
 import { ref, onMounted } from 'vue'
 import { useAppStore } from '../stores/app'
 import { storeToRefs } from 'pinia'
-import { saveConfig, getSensitiveRules } from '../utils/tauri-api'
+import { saveConfig, getSensitiveRules, getRecommendedConcurrency } from '../utils/tauri-api' // 【新增】导入 getRecommendedConcurrency
 import { applyTheme } from '../utils/theme'
 
 const emit = defineEmits<{
@@ -152,6 +152,19 @@ onMounted(async () => {
   try {
     const rules = await getSensitiveRules()
     sensitiveTypes.value = rules.map(([id, name]) => ({ id, name }))
+    
+    // 【新增】如果并发数为 0（首次运行），自动获取推荐值
+    if (config.value.scan_concurrency === 0) {
+      try {
+        const info = await getRecommendedConcurrency()
+        config.value.scan_concurrency = info.recommended
+        console.log(`自动设置并发数为: ${info.recommended} (CPU: ${info.cpu_count}核, 可用内存: ${info.free_memory_gb}GB)`)
+      } catch (error) {
+        console.error('获取推荐并发数失败:', error)
+        // 降级为默认值 4
+        config.value.scan_concurrency = 4
+      }
+    }
   } catch (error) {
     console.error('获取敏感规则失败:', error)
   }

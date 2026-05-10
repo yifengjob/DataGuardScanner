@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="table-content">
+    <div class="table-content" :class="{ resizing: isResizing }">
       <table v-if="filteredResults.length > 0">
         <thead>
         <tr>
@@ -166,6 +166,22 @@ const sortOrder = ref<'asc' | 'desc'>('asc')
 const allSensitiveTypes = ref<Array<{ id: string; name: string }>>([])
 const selectedFiles = ref<Set<string>>(new Set())
 const selectAllCheckbox = ref<HTMLInputElement | null>(null)
+const isResizing = ref(false)  // ← 新增：标记是否正在 resize
+
+// 监听窗口 resize
+let resizeTimer: number | null = null
+onMounted(() => {
+  const handleResize = () => {
+    isResizing.value = true
+    if (resizeTimer) clearTimeout(resizeTimer)
+    resizeTimer = window.setTimeout(() => {
+      isResizing.value = false
+    }, 300)  // ← 增加到 300ms，给用户更多时间完成 resize
+  }
+  
+  // 使用 passive listener 提升性能
+  window.addEventListener('resize', handleResize, { passive: true })
+})
 
 // 加载敏感类型定义
 onMounted(async () => {
@@ -435,7 +451,7 @@ const handleBatchDelete = async () => {
   border: var(--border-width) solid var(--border-color);
   border-radius: var(--radius-sm);
   font-size: 0.9em;                  /* 略小但可读 */
-  width: clamp(10rem, 15vw, 15rem);
+  width: 15rem;                      /* ← 固定宽度，避免 clamp 在 resize 时重新计算 */
   background-color: var(--input-bg);
   color: var(--text-color);
 }
@@ -443,13 +459,32 @@ const handleBatchDelete = async () => {
 .table-content {
   flex: 1;
   overflow: auto;                    /* 允许水平滚动 */
+  will-change: scroll-position;      /* ← 优化滚动性能 */
+  contain: layout style paint;       /* ← 限制重排范围 */
 }
 
+/* resize 时禁用 sticky 提升性能 */
+.table-content.resizing thead,
+.table-content.resizing th.checkbox-col,
+.table-content.resizing th.path-col,
+.table-content.resizing th.actions-col,
+.table-content.resizing td.checkbox-col,
+.table-content.resizing td.path-cell,
+.table-content.resizing td.actions-col {
+  position: static !important;
+  box-shadow: none !important;
+  z-index: auto !important;
+}
+
+/* 优化表格渲染性能 */
 table {
   width: max-content;                /* 表格宽度根据内容自适应 */
   min-width: 100%;                   /* 至少占满容器 */
   border-collapse: collapse;
   font-size: 0.95em;                 /* 表格字体略大于默认 */
+  transform: translateZ(0);          /* ← 启用 GPU 加速 */
+  backface-visibility: hidden;       /* ← 减少重绘 */
+  -webkit-backface-visibility: hidden;
 }
 
 thead {
@@ -465,7 +500,7 @@ th {
   font-weight: 600;
   border-bottom: var(--border-width-thick) solid var(--border-color);
   user-select: none;
-  transition: background-color 0.15s ease;
+  /* transition: background-color 0.15s ease; */  /* ← 移除 transition 提升性能 */
   position: relative;
   font-size: 0.9em;                  /* VS Code 表头略小 */
   white-space: nowrap;               /* 防止表头换行 */
@@ -574,7 +609,7 @@ td.checkbox-col input[type="checkbox"] {
 }
 
 tr {
-  transition: background-color 0.15s ease;
+  /* transition: background-color 0.15s ease; */  /* ← 移除 transition 提升性能 */
 }
 
 tr:hover {

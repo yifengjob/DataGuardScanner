@@ -137,64 +137,65 @@ const handleAllFilesCheck = (event: Event) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 0.5em 0.75em;                /* 8px 12px - 紧凑的表头 */
   background-color: var(--toolbar-bg);
   cursor: pointer;
   user-select: none;
 }
 
 .filter-header h3 {
-  font-size: 14px;
+  font-size: 0.95em;                 /* 接近基础字体 */
   font-weight: 600;
 }
 
 .collapse-icon {
-  font-size: 10px;
+  font-size: 0.7em;                  /* 相对于标题字体 */
 }
 
 .filter-content {
-  padding: 12px;
+  padding: var(--spacing-md);        /* 12px */
   max-height: 300px;
   overflow-y: auto;
+  contain: layout style;             /* ← 限制重排范围 */
 }
 
 .file-group {
-  margin-bottom: 12px;
+  margin-bottom: var(--spacing-md);  /* 12px */
 }
 
 .group-header {
-  margin-bottom: 6px;
+  margin-bottom: var(--spacing-xs);  /* 6px */
 }
 
 .group-label {
-  font-size: 13px;
+  font-size: 0.9em;                  /* 略小于基础字体 */
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-xs);            /* 6px */
 }
 
 .format-hint {
-  font-size: 11px;
+  font-size: 0.8em;                  /* 相对于组标签字体 */
   color: var(--text-secondary);
   font-weight: normal;
-  margin-left: 4px;
+  margin-left: var(--spacing-xs);    /* 4px */
 }
 
 .group-extensions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding-left: 20px;
+  gap: var(--spacing-sm);            /* 8px */
+  padding-left: 1.25em;              /* 20px */
 }
 
 .extension-item {
-  font-size: 12px;
+  font-size: 0.85em;                 /* 略小但可读 */
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-xs);            /* 4px */
 }
 
 .extension-item input[type="checkbox"] {
@@ -202,14 +203,14 @@ const handleAllFilesCheck = (event: Event) => {
 }
 
 .all-files-group {
-  padding: 8px;
+  padding: var(--spacing-sm);        /* 8px */
   background-color: var(--bg-selected);
-  border-radius: 4px;
-  margin-bottom: 16px;
+  border-radius: var(--radius-md);   /* 4px */
+  margin-bottom: var(--spacing-lg);  /* 16px */
 }
 
 .all-files-label {
-  font-size: 14px;
+  font-size: 0.95em;                 /* 接近基础字体 */
 }
 
 .file-group.disabled {

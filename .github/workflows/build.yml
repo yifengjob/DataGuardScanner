@@ -14,42 +14,59 @@ jobs:
           # Windows 64-bit
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            platform: windows-x64
+            platform: windows
+            arch: x86_64
             args: ""
           
           # Windows 32-bit
           - os: windows-latest
             target: i686-pc-windows-msvc
-            platform: windows-x86
+            platform: windows
+            arch: x86
             args: ""
           
           # Linux x86_64
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-            platform: linux-x64
+            platform: linux
+            arch: x86_64
             args: ""
           
           # Linux ARM64 (aarch64) - only build .deb and .rpm, skip AppImage due to linuxdeploy issues
           - os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
-            platform: linux-arm64
+            platform: linux
+            arch: arm64
             args: "--bundles deb rpm"
           
           # macOS Intel
           - os: macos-latest
             target: x86_64-apple-darwin
-            platform: macos-intel
+            platform: macos
+            arch: x86_64
             args: ""
           
           # macOS Apple Silicon (ARM)
           - os: macos-latest
             target: aarch64-apple-darwin
-            platform: macos-arm
+            platform: macos
+            arch: arm64
             args: ""
 
     runs-on: ${{ matrix.os }}
 
     steps:
+      # 提取版本和产品信息
+      - name: Extract version and product info
+        id: info
+        shell: bash
+        run: |
+          VERSION=$(cat package.json | grep '"version"' | head -1 | sed 's/.*: "\(.*\)".*/\1/')
+          PRODUCT_NAME=$(cat src-tauri/tauri.conf.json | grep '"productName"' | head -1 | sed 's/.*: "\(.*\)".*/\1/' | sed 's/ /-/g')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "product_name=$PRODUCT_NAME" >> $GITHUB_OUTPUT
+          echo "Product: $PRODUCT_NAME, Version: $VERSION"
+
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
@@ -78,14 +95,14 @@ jobs:
       
       # Setup QEMU for ARM builds
       - name: Setup QEMU for ARM
-        if: matrix.platform == 'linux-arm64'
+        if: matrix.arch == 'arm64' && matrix.platform == 'linux'
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
       
       # Configure cross-compilation environment for ARM64
       - name: Configure ARM64 cross-compilation
-        if: matrix.platform == 'linux-arm64'
+        if: matrix.arch == 'arm64' && matrix.platform == 'linux'
         run: |
           # Set up pkg-config for cross-compilation
           echo "PKG_CONFIG_ALLOW_CROSS=1" >> $GITHUB_ENV
@@ -100,12 +117,12 @@ jobs:
       
       # Install Tauri CLI for portable build
       - name: Install Tauri CLI
-        if: startsWith(matrix.platform, 'windows')
+        if: matrix.platform == 'windows'
         run: cargo install tauri-cli --version "^2.0.0"
 
       # Install Linux dependencies
       - name: Install Linux dependencies
-        if: startsWith(matrix.platform, 'linux')
+        if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -118,7 +135,7 @@ jobs:
             libfuse2
           
           # Install cross-compilation tools and libraries for ARM64
-          if [ "${{ matrix.platform }}" = "linux-arm64" ]; then
+          if [ "${{ matrix.arch }}" = "arm64" ] && [ "${{ matrix.platform }}" = "linux" ]; then
             echo "Installing ARM64 cross-compilation dependencies..."
             sudo apt-get install -y \
               gcc-aarch64-linux-gnu \
@@ -201,11 +218,11 @@ jobs:
         with:
           projectPath: src-tauri
           args: --target ${{ matrix.target }} ${{ matrix.args }}
-        continue-on-error: ${{ matrix.platform == 'linux-arm64' }}
+        continue-on-error: ${{ matrix.arch == 'arm64' && matrix.platform == 'linux' }}
 
       # Build Windows portable EXE (additional)
       - name: Build Windows Portable EXE
-        if: startsWith(matrix.platform, 'windows')
+        if: matrix.platform == 'windows'
         run: |
           cd src-tauri
           # Use cargo tauri build with --no-bundle to skip packaging and only generate EXE
@@ -213,7 +230,7 @@ jobs:
 
       # Debug: List build outputs
       - name: List build outputs
-        if: startsWith(matrix.platform, 'windows')
+        if: matrix.platform == 'windows'
         shell: pwsh
         run: |
           Write-Host "=== Checking target directory ==="
@@ -223,20 +240,20 @@ jobs:
 
       # Upload artifacts
       - name: Upload Windows artifacts
-        if: startsWith(matrix.platform, 'windows')
+        if: matrix.platform == 'windows'
         uses: actions/upload-artifact@v7
         with:
-          name: dataguard-scanner-${{ matrix.platform }}
+          name: ${{ steps.info.outputs.product_name }}-${{ matrix.platform }}-${{ steps.info.outputs.version }}-${{ matrix.arch }}-Setup
           path: |
             target/${{ matrix.target }}/release/bundle/nsis/*.exe
             target/${{ matrix.target }}/release/bundle/msi/*.msi
           if-no-files-found: error
 
       - name: Upload Linux artifacts
-        if: startsWith(matrix.platform, 'linux')
+        if: matrix.platform == 'linux'
         uses: actions/upload-artifact@v7
         with:
-          name: dataguard-scanner-${{ matrix.platform }}
+          name: ${{ steps.info.outputs.product_name }}-${{ matrix.platform }}-${{ steps.info.outputs.version }}-${{ matrix.arch }}
           path: |
             target/${{ matrix.target }}/release/bundle/deb/*.deb
             target/${{ matrix.target }}/release/bundle/rpm/*.rpm
@@ -244,38 +261,37 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload macOS artifacts
-        if: startsWith(matrix.platform, 'macos')
+        if: matrix.platform == 'macos'
         uses: actions/upload-artifact@v7
         with:
-          name: dataguard-scanner-${{ matrix.platform }}
+          name: ${{ steps.info.outputs.product_name }}-${{ matrix.platform }}-${{ steps.info.outputs.version }}-${{ matrix.arch }}
           path: |
             target/${{ matrix.target }}/release/bundle/dmg/*.dmg
             target/${{ matrix.target }}/release/bundle/macos/*.app
           if-no-files-found: error
 
       # Upload Windows portable EXE separately
-      - name: Upload Windows Portable EXE
-        if: startsWith(matrix.platform, 'windows')
+      - name: Rename Windows Portable EXE
+        if: matrix.platform == 'windows'
         shell: pwsh
         run: |
-          # Rename portable exe to include architecture
           $targetDir = "target/${{ matrix.target }}/release"
           $exeFile = Join-Path $targetDir "dataguard-scanner.exe"
           if (Test-Path $exeFile) {
-            $arch = if ('${{ matrix.target }}' -match 'x86_64') { 'x64' } else { 'x86' }
-            $newName = "dataguard-scanner-${arch}-portable.exe"
+            $productName = "${{ steps.info.outputs.product_name }}"
+            $version = "${{ steps.info.outputs.version }}"
+            $arch = "${{ matrix.arch }}"
+            $newName = "${productName}-${{ matrix.platform }}-${version}-${arch}-Portable.exe"
             Copy-Item $exeFile (Join-Path $targetDir $newName)
             Write-Host "Renamed to: $newName"
           }
 
       - name: Upload Windows Portable EXE Artifact
-        if: startsWith(matrix.platform, 'windows')
+        if: matrix.platform == 'windows'
         uses: actions/upload-artifact@v7
         with:
-          name: dataguard-scanner-${{ matrix.platform }}-portable
-          path: |
-            target/${{ matrix.target }}/release/dataguard-scanner-x64-portable.exe
-            target/${{ matrix.target }}/release/dataguard-scanner-x86-portable.exe
+          name: ${{ steps.info.outputs.product_name }}-${{ matrix.platform }}-${{ steps.info.outputs.version }}-${{ matrix.arch }}-Portable
+          path: target/${{ matrix.target }}/release/*-Portable.exe
           if-no-files-found: ignore
 
   release:

@@ -13,7 +13,7 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 frontend/.pnpm-store/
-
+node_modules/
 # IDE
 .idea/
 .vscode/
@@ -30,7 +30,3 @@ Thumbs.db
 
 # Config (optional, uncomment if you don't want to track config)
 # data/config.json
-
-# Documentation (保留 README.md 等项目文档)
-需求.md
-跨平台构建指南.md

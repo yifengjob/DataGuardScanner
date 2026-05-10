@@ -77,6 +77,16 @@ export async function loadConfig(): Promise<AppConfig> {
   return await invoke('load_config')
 }
 
+// 【新增】获取推荐的并发数
+export async function getRecommendedConcurrency(): Promise<{
+  recommended: number
+  max_allowed: number
+  cpu_count: number
+  free_memory_gb: string
+}> {
+  return await invoke('get_recommended_concurrency')
+}
+
 // 监听扫描进度事件
 export async function onScanProgress(callback: (data: any) => void): Promise<UnlistenFn> {
   return await listen('scan-progress', (event) => {

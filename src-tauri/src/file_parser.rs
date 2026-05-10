@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::Path;
+use crate::config;
 use encoding_rs::GBK;
 
 /// 读取文本文件内容，自动检测编码
@@ -256,28 +257,22 @@ pub fn extract_text_from_file(path: &str) -> Result<(String, bool), String> {
         .unwrap_or("")
         .to_lowercase();
     
-    let unsupported_preview = matches!(ext.as_str(), "dps" | "zip" | "rar" | "7z" | "tar" | "gz");
-    
-    if unsupported_preview {
+    // 【优化】使用常量判断不支持预览的文件类型
+    if config::UNSUPPORTED_PREVIEW_EXTENSIONS.contains(&ext.as_str()) {
         return Ok(("".to_string(), true));
     }
     
-    let text = match ext.as_str() {
-        "txt" | "log" | "md" | "ini" | "conf" | "cfg" | "env" |
-        "js" | "ts" | "py" | "java" | "c" | "cpp" | "go" | "rs" |
-        "php" | "rb" | "swift" | "html" | "sh" | "cmd" | "bat" |
-        "csv" | "json" | "xml" | "yaml" | "yml" | "properties" | "toml" => {
-            read_text_file(path)?
-        }
-        "pdf" => {
-            read_pdf_file(path)?
-        }
-        "xlsx" | "xls" | "docx" | "pptx" | "doc" | "ppt" | "wps" | "et" | "dps" => {
-            read_office_file(path, &ext)?
-        }
-        _ => {
-            return Err(format!("不支持的文件格式: {}", ext));
-        }
+    // 【优化】使用处理器映射表，避免冗长的 if-else 链
+    let handler = match config::FileHandler::from_extension(&ext) {
+        Some(h) => h,
+        None => return Err(format!("不支持的文件格式: {}", ext)),
+    };
+    
+    // 根据处理器类型调用对应的解析函数
+    let text = match handler {
+        config::FileHandler::Text => read_text_file(path)?,
+        config::FileHandler::Pdf => read_pdf_file(path)?,
+        config::FileHandler::Office => read_office_file(path, &ext)?,
     };
     
     Ok((text, false))

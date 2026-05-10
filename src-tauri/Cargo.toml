@@ -35,3 +35,7 @@ calamine = "0.34"
 
 # Excel 写入（用于导出报告）
 rust_xlsxwriter = "0.94"
+
+# 系统信息获取
+num_cpus = "1"
+sys-info = "0.9"
