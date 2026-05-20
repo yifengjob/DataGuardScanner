@@ -66,9 +66,13 @@ filesToUpdate.forEach(file => {
       );
     } else if (file.isVue) {
       // 处理 Vue 文件中的版本号
+      // 支持多种格式: v1.0.15, 版本 1.0.15, Version 1.0.15
       newContent = content.replace(
-        /版本 \d+\.\d+\.\d+/g,
-        `版本 ${newVersion}`
+        /\bv\d+\.\d+\.\d+\b/g,
+        `v${newVersion}`
+      ).replace(
+        /(版本|Version)\s+\d+\.\d+\.\d+/gi,
+        `$1 ${newVersion}`
       );
     } else {
       // 处理 JSON 文件

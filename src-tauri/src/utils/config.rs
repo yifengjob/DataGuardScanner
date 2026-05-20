@@ -31,7 +31,7 @@ pub const CONCURRENCY_MEMORY_RATIO: f64 = 0.7;
 pub const DEFAULT_CONCURRENCY_CPU_RATIO: f64 = 0.5;
 
 /// 默认并发数最大值
-pub const DEFAULT_CONCURRENCY_MAX: usize = 8;
+pub const DEFAULT_CONCURRENCY_MAX: usize = 6;
 
 /// 默认并发数最小值
 pub const DEFAULT_CONCURRENCY_MIN: usize = 2;
@@ -218,13 +218,13 @@ pub const PROGRESS_MASSIVE_UPDATE_INTERVAL: u64 = 100;
 // ==================== 窗口配置 ====================
 
 /// 窗口最小宽度（逻辑像素）
-pub const WINDOW_MIN_WIDTH: u32 = 1000;
+pub const WINDOW_MIN_WIDTH: u32 = 1024;
 
 /// 窗口最小高度（逻辑像素）
-pub const WINDOW_MIN_HEIGHT: u32 = 600;
+pub const WINDOW_MIN_HEIGHT: u32 = 700;
 
 /// 窗口目标尺寸比例（屏幕的百分比）
-pub const WINDOW_TARGET_RATIO: f64 = 0.8;
+pub const WINDOW_TARGET_RATIO: f64 = 0.85;
 
 /// 窗口居中延迟（毫秒）
 pub const WINDOW_CENTER_DELAY_MS: u64 = 100;
