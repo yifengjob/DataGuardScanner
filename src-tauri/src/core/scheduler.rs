@@ -190,16 +190,28 @@ impl MultiQueueScheduler {
             }
         }
 
-        // ==================== 策略2: 选择小文件（允许同类型并行）====================
+        // ==================== 策略2: 选择不同类型的小文件 ====================
         // 目标：确保Worker不闲置，同时提高吞吐量
-        // 【关键】小文件允许同类型并行，不检查is_type_blocked
         let next_idx = self.state.next_type_index.load(Ordering::SeqCst);
         
         for i in 0..type_order.len() {
             let idx = (next_idx + i) % type_order.len();
             let file_type = &type_order[idx];
             
-            // 只选择小文件（大文件已在策略1中处理）
+            // 优先大文件（如果未达上限且类型未被阻塞）
+            if current_large < self.max_large_concurrent {
+                if !self.is_type_blocked(file_type, true)
+                    && let Some(task) = self.dequeue_task(file_type, true) {
+                        self.state.next_type_index.store(
+                            (idx + 1) % type_order.len(),
+                            Ordering::SeqCst
+                        );
+                        log::debug!("[智能调度] 策略2: 选择大文件 {}", file_type);
+                        return Some(task);
+                    }
+            }
+            
+            // 其次选择小文件（不检查类型阻塞，允许同类型并行）✅
             if let Some(task) = self.dequeue_task(file_type, false) {
                 self.state.next_type_index.store(
                     (idx + 1) % type_order.len(),

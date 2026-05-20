@@ -21,6 +21,9 @@ pub const DEFAULT_MAX_PDF_SIZE_MB: u64 = 100;
 /// 每个 Worker 预估内存占用（GB）
 pub const MEMORY_PER_WORKER_GB: f64 = 0.15;
 
+/// 【新增】大文件处理时每个 Worker 预估内存占用（GB）- 比普通文件高，用于限制大文件并发
+pub const MEMORY_PER_LARGE_FILE_WORKER_GB: f64 = 0.8;
+
 /// 并发数绝对最大值
 pub const CONCURRENCY_ABSOLUTE_MAX: usize = 8;
 
@@ -56,19 +59,34 @@ pub const RESULT_BATCH_TIMEOUT_MS: u64 = 200;
 pub const SCHEDULER_SMALL_FILE_THRESHOLD_MB: f64 = 1.0;
 
 /// 【新增】中等文件阈值（MB）- 小于此值视为中等文件
+#[allow(dead_code)]
 pub const SCHEDULER_MEDIUM_FILE_THRESHOLD_MB: f64 = 10.0;
 
-/// 【新增】大文件阈值（MB）- 大于等于此值视为大文件
-pub const SCHEDULER_LARGE_FILE_THRESHOLD_MB: f64 = 50.0;
+/// 【新增】大文件阈值（MB）- 大于等于此值视为大文件（与Electron对齐）
+pub const SCHEDULER_LARGE_FILE_THRESHOLD_MB: f64 = 10.0;
 
 /// 【新增】超大文件阈值（MB）- 大于此值视为超大文件
+#[allow(dead_code)]
 pub const SCHEDULER_ULTRA_LARGE_THRESHOLD_MB: f64 = 100.0;
 
 /// 【新增】大文件最大并发数 - 限制同时处理的大文件数量
+/// 【注意】这个值是绝对上限，实际值会根据系统资源动态计算
 pub const LARGE_FILE_MAX_CONCURRENCY: usize = 2;
 
-/// 【新增】类型互斥超时时间（毫秒）- 如果超过此时间找不到不同类型，允许同类型
-pub const TYPE_MUTEX_TIMEOUT_MS: u64 = 5000;
+/// 【新增】大文件并发数绝对最大值 - 即使内存充足也不超过此值
+pub const LARGE_FILES_CONCURRENT_ABSOLUTE_MAX: usize = 4;
+
+/// 【新增】大文件并发计算时使用的安全内存比例 - 预留更多内存给小文件和其他开销
+pub const LARGE_FILES_MEMORY_RATIO: f64 = 0.4;
+
+/// 【新增】大文件并发计算的 CPU 核心数比例 - 更保守，避免CPU过载
+pub const LARGE_FILES_CPU_RATIO: f64 = 0.3;
+
+/// 【新增】大文件并发数最小值 - 保证基本性能
+pub const LARGE_FILES_CONCURRENT_MIN: usize = 1;
+
+/// 【新增】类型互斥超时时间（毫秒）- 如果超过此时间找不到不同类型，允许同类型（与Electron对齐）
+pub const TYPE_MUTEX_TIMEOUT_MS: u64 = 2000;
 
 // ==================== 日志配置 ====================
 

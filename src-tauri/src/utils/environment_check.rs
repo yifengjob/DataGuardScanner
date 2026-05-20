@@ -9,6 +9,7 @@
 /// - 依赖库版本检查
 
 use sys_info;
+use crate::utils::concurrency::get_mem_info_with_defaults;
 
 /// 环境检查结果
 #[derive(Debug, Clone)]
@@ -108,38 +109,28 @@ fn check_os(result: &mut EnvironmentCheckResult) {
 
 /// 检查内存
 fn check_memory(result: &mut EnvironmentCheckResult) {
-    match sys_info::mem_info() {
-        Ok(mem_info) => {
-            let total_mb = mem_info.total / 1024;
-            let _free_mb = mem_info.free / 1024;
-            let available_mb = mem_info.avail / 1024;
-            
-            let passed = available_mb >= 512; // 至少512MB可用内存
-            let message = format!(
-                "总计: {} MB, 可用: {} MB",
-                total_mb, available_mb
-            );
-            
-            result.add_detail(CheckDetail {
-                name: "内存".to_string(),
-                passed,
-                message,
-                suggestion: if !passed {
-                    Some("可用内存不足，建议关闭其他应用程序".to_string())
-                } else {
-                    None
-                },
-            });
-        }
-        Err(e) => {
-            result.add_detail(CheckDetail {
-                name: "内存".to_string(),
-                passed: false,
-                message: format!("无法获取内存信息: {}", e),
-                suggestion: Some("请确保系统正常运行".to_string()),
-            });
-        }
-    }
+    let mem_info = get_mem_info_with_defaults();
+    
+    let total_mb = mem_info.total / 1024;
+    let _free_mb = mem_info.free / 1024;
+    let available_mb = mem_info.avail / 1024;
+    
+    let passed = available_mb >= 512; // 至少512MB可用内存
+    let message = format!(
+        "总计: {} MB, 可用: {} MB",
+        total_mb, available_mb
+    );
+    
+    result.add_detail(CheckDetail {
+        name: "内存".to_string(),
+        passed,
+        message,
+        suggestion: if !passed {
+            Some("可用内存不足，建议关闭其他应用程序".to_string())
+        } else {
+            None
+        },
+    });
 }
 
 /// 检查磁盘空间

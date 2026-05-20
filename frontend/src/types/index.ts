@@ -16,6 +16,8 @@ export interface ScanConfig {
   maxFileSizeMb: number;
   maxPdfSizeMb: number;
   scanConcurrency: number;
+  enableBuiltinRules: boolean; // 【新增】是否启用内置敏感词规则
+  searchExpression?: string; // 【新增】自定义搜索表达式
 }
 
 export interface ScanResultItem {

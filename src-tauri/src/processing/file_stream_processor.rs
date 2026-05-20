@@ -42,6 +42,10 @@ pub struct ProcessStats {
     pub chunks_processed: usize,
     /// 发现的敏感数据数量
     pub sensitive_count: usize,
+    /// 【新增】详细分类计数（规则ID -> 匹配次数）
+    pub counts: std::collections::HashMap<String, u32>,
+    /// 【新增】自定义表达式匹配状态（0或1）
+    pub expression_matched: Option<u32>,
 }
 
 /// 流式文件处理器
@@ -75,11 +79,9 @@ macro_rules! impl_streaming_processor {
             use std::cell::RefCell;
             use std::rc::Rc;
             
-            let enabled_types = config.enabled_types.clone();
-            let preview_mode = config.preview_mode;
-            
             let processor_ref = Rc::new(RefCell::new(self));
             let processor_clone = processor_ref.clone();
+            let config_clone = config.clone();
             
             $extractor(file_path $(, $extra_args)*, move |text: String| -> Result<bool, String> {
                 let mut proc = processor_clone.borrow_mut();
@@ -87,7 +89,7 @@ macro_rules! impl_streaming_processor {
                 proc.buffer.push('\n');
                 
                 if proc.buffer.len() >= CHUNK_SIZE {
-                    if let Err(e) = proc.process_chunk_sync(&enabled_types, preview_mode) {
+                    if let Err(e) = proc.process_chunk_sync(&config_clone) {
                         return Err(e);
                     }
                 }
@@ -98,7 +100,7 @@ macro_rules! impl_streaming_processor {
             {
                 let mut proc = processor_ref.borrow_mut();
                 if !proc.buffer.is_empty() {
-                    proc.process_chunk_sync(&config.enabled_types, config.preview_mode)
+                    proc.process_chunk_sync(config)
                         .map_err(|e| format!("处理剩余缓冲区失败: {}", e))?;
                 }
             }
@@ -123,6 +125,8 @@ impl FileStreamProcessor {
                 total_chars: 0,
                 chunks_processed: 0,
                 sensitive_count: 0,
+                counts: std::collections::HashMap::new(),
+                expression_matched: None,
             },
         }
     }
@@ -220,23 +224,36 @@ impl FileStreamProcessor {
     /// 【内部】处理单个块的核心逻辑
     fn process_current_chunk(
         &mut self,
-        enabled_types: &[String],
-        preview_mode: bool,
+        config: &StreamProcessorConfig,
     ) {
         // 添加上一块的重叠区到当前块开头
         let mut current_chunk = self.previous_overlap.clone();
         current_chunk.push_str(&self.buffer);
 
         // 检测敏感数据
-        if !preview_mode {
-            let (counts, _expr_matched) = detect_sensitive_data(
+        if !config.preview_mode {
+            let (counts, expr_matched) = detect_sensitive_data(
                 &current_chunk,
-                enabled_types,
-                true, // TODO: 从 config 传递
-                None, // TODO: 从 config 传递
+                &config.enabled_types,
+                config.enable_builtin_rules,  // ✅ 从 config 传递
+                config.search_expression.as_deref(),  // ✅ 从 config 传递
             );
+            
+            // 累加总数
             let chunk_sensitive_count: u32 = counts.values().sum();
             self.stats.sensitive_count += chunk_sensitive_count as usize;
+            
+            // 【新增】合并详细计数
+            for (type_id, count) in counts {
+                *self.stats.counts.entry(type_id).or_insert(0) += count;
+            }
+            
+            // 【新增】更新表达式匹配状态（OR逻辑：只要有一块匹配就算匹配）
+            if let Some(matched) = expr_matched {
+                self.stats.expression_matched = Some(
+                    self.stats.expression_matched.unwrap_or(0) | matched
+                );
+            }
         }
 
         // 计算行数
@@ -272,14 +289,13 @@ impl FileStreamProcessor {
     /// 同步版本的process_chunk（用于流式回调）
     fn process_chunk_sync(
         &mut self,
-        enabled_types: &[String],
-        preview_mode: bool,
+        config: &StreamProcessorConfig,
     ) -> Result<(), String> {
         if self.buffer.is_empty() {
             return Ok(());
         }
 
-        self.process_current_chunk(enabled_types, preview_mode);
+        self.process_current_chunk(config);
         Ok(())
     }
 
@@ -358,7 +374,7 @@ impl FileStreamProcessor {
             return Ok(());
         }
 
-        self.process_current_chunk(&config.enabled_types, config.preview_mode);
+        self.process_current_chunk(config);
         Ok(())
     }
 
@@ -382,6 +398,8 @@ impl FileStreamProcessor {
             total_chars: 0,
             chunks_processed: 0,
             sensitive_count: 0,
+            counts: std::collections::HashMap::new(),
+            expression_matched: None,
         };
     }
 }
@@ -510,5 +528,68 @@ mod tests {
         assert!(processor.buffer.is_empty());
         assert_eq!(processor.total_bytes, 0);
         assert_eq!(processor.chunk_index, 0);
+    }
+
+    #[tokio::test]
+    async fn test_detailed_counts() {
+        // 创建包含多种敏感信息的临时文件
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "测试文件包含多种敏感信息:").unwrap();
+        writeln!(temp_file, "手机号: 13800138000").unwrap();
+        writeln!(temp_file, "邮箱: test@example.com").unwrap();
+        writeln!(temp_file, "另一个手机: 13900139000").unwrap();
+        
+        let config = StreamProcessorConfig {
+            enabled_types: vec!["phone".to_string(), "email".to_string()],
+            preview_mode: false,
+            enable_builtin_rules: true,
+            search_expression: None,
+        };
+
+        let mut processor = FileStreamProcessor::new();
+        let stats = processor.process_file(
+            temp_file.path().to_str().unwrap(),
+            &config,
+            None,
+        ).await.unwrap();
+
+        // 验证总数
+        assert_eq!(stats.sensitive_count, 3, "应该检测到3处敏感信息");
+        
+        // 【新增】验证详细计数
+        assert_eq!(stats.counts.get("phone"), Some(&2), "应该检测到2个手机号");
+        assert_eq!(stats.counts.get("email"), Some(&1), "应该检测到1个邮箱");
+        
+        // 【新增】验证表达式匹配状态（未配置表达式应为None）
+        assert_eq!(stats.expression_matched, None, "未配置表达式时应为None");
+    }
+
+    #[tokio::test]
+    async fn test_expression_matching() {
+        // 创建包含关键字的临时文件
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "这是一个测试文件").unwrap();
+        writeln!(temp_file, "包含关键字: 密码").unwrap();
+        writeln!(temp_file, "另一行文本").unwrap();
+        
+        let config = StreamProcessorConfig {
+            enabled_types: vec![],  // 不启用内置规则
+            preview_mode: false,
+            enable_builtin_rules: false,  // 禁用内置规则
+            search_expression: Some("密码".to_string()),  // 使用自定义表达式
+        };
+
+        let mut processor = FileStreamProcessor::new();
+        let stats = processor.process_file(
+            temp_file.path().to_str().unwrap(),
+            &config,
+            None,
+        ).await.unwrap();
+
+        // 验证表达式匹配状态
+        assert_eq!(stats.expression_matched, Some(1), "应该匹配到表达式");
+        
+        // 禁用内置规则时，counts应为空
+        assert!(stats.counts.is_empty(), "禁用内置规则时counts应为空");
     }
 }

@@ -31,16 +31,7 @@ impl MemoryManager {
     /// 创建新的内存管理器
     pub fn new(max_workers: usize) -> Self {
         // 【修复】macOS上应该使用avail而不是free
-        let mem_info = sys_info::mem_info()
-            .unwrap_or(sys_info::MemInfo {
-                total: (8.0 * config::BYTES_TO_GB / 1024.0) as u64,
-                free: (2.0 * config::BYTES_TO_GB / 1024.0) as u64,
-                avail: (4.0 * config::BYTES_TO_GB / 1024.0) as u64,
-                buffers: 0,
-                cached: 0,
-                swap_total: 0,
-                swap_free: 0,
-            });
+        let mem_info = get_mem_info_with_defaults();
         
         // 使用avail（available）而不是free
         let available_memory_bytes = mem_info.avail * 1024;
@@ -168,14 +159,25 @@ pub struct ConcurrencyInfo {
     pub free_memory_gb: f64,
 }
 
-/// 根据系统硬件资源智能计算推荐的并发数
-pub fn calculate_recommended_concurrency() -> ConcurrencyInfo {
-    let cpu_count = num_cpus::get();
+/// 【新增】获取系统可用内存（GB）- 统一处理默认值和平台差异
+/// 
+/// macOS会将空闲内存用于文件系统缓存，free会显示很小的值
+/// avail才是真正可用的内存（包括可回收的缓存）
+fn get_available_memory_gb() -> f64 {
+    let mem_info = get_mem_info_with_defaults();
     
-    // 【修复】macOS上应该使用avail而不是free
-    // macOS会将空闲内存用于文件系统缓存，free会显示很小的值
-    // avail才是真正可用的内存（包括可回收的缓存）
-    let mem_info = sys_info::mem_info().unwrap_or(sys_info::MemInfo {
+    // 使用avail（available）而不是free
+    let available_memory_bytes = mem_info.avail * 1024;
+    available_memory_bytes as f64 / BYTES_TO_GB
+}
+
+/// 【新增】获取内存信息（带默认值）- 公共辅助函数
+/// 
+/// 如果sys_info失败，返回合理的默认值
+/// macOS会将空闲内存用于文件系统缓存，free会显示很小的值
+/// avail才是真正可用的内存（包括可回收的缓存）
+pub fn get_mem_info_with_defaults() -> sys_info::MemInfo {
+    sys_info::mem_info().unwrap_or(sys_info::MemInfo {
         total: (8.0 * config::BYTES_TO_GB / 1024.0) as u64, // 默认8GB总内存
         free: (2.0 * config::BYTES_TO_GB / 1024.0) as u64,  // 默认2GB空闲
         avail: (4.0 * config::BYTES_TO_GB / 1024.0) as u64, // 默认4GB可用
@@ -183,11 +185,13 @@ pub fn calculate_recommended_concurrency() -> ConcurrencyInfo {
         cached: 0,
         swap_total: 0,
         swap_free: 0,
-    });
-    
-    // 使用avail（available）而不是free
-    let available_memory_bytes = mem_info.avail * 1024;
-    let free_memory_gb = available_memory_bytes as f64 / BYTES_TO_GB;
+    })
+}
+
+/// 根据系统硬件资源智能计算推荐的并发数
+pub fn calculate_recommended_concurrency() -> ConcurrencyInfo {
+    let cpu_count = num_cpus::get();
+    let free_memory_gb = get_available_memory_gb();
     
     // 根据内存计算最大并发数
     let max_by_memory = (free_memory_gb * CONCURRENCY_MEMORY_RATIO / config::MEMORY_PER_WORKER_GB).floor() as usize;
@@ -212,21 +216,7 @@ pub fn calculate_recommended_concurrency() -> ConcurrencyInfo {
 /// 根据配置和系统资源计算实际使用的并发数
 pub fn calculate_actual_concurrency(configured_concurrency: usize) -> ConcurrencyInfo {
     let cpu_count = num_cpus::get();
-    
-    // 【修复】macOS上应该使用avail而不是free
-    let mem_info = sys_info::mem_info().unwrap_or(sys_info::MemInfo {
-        total: (8.0 * config::BYTES_TO_GB / 1024.0) as u64,
-        free: (2.0 * config::BYTES_TO_GB / 1024.0) as u64,
-        avail: (4.0 * config::BYTES_TO_GB / 1024.0) as u64,
-        buffers: 0,
-        cached: 0,
-        swap_total: 0,
-        swap_free: 0,
-    });
-    
-    // 使用avail（available）而不是free
-    let available_memory_bytes = mem_info.avail * 1024;
-    let free_memory_gb = available_memory_bytes as f64 / BYTES_TO_GB;
+    let free_memory_gb = get_available_memory_gb();
     
     // 根据内存计算最大并发数
     let max_by_memory = (free_memory_gb * CONCURRENCY_MEMORY_RATIO / config::MEMORY_PER_WORKER_GB).floor() as usize;
@@ -283,4 +273,59 @@ pub fn calculate_actual_concurrency(configured_concurrency: usize) -> Concurrenc
 /// 创建信号量用于并发控制
 pub fn create_semaphore(concurrency: usize) -> Arc<Semaphore> {
     Arc::new(Semaphore::new(concurrency))
+}
+
+/// 【新增】根据系统资源动态计算最大大文件并发数
+///
+/// 设计原则：
+/// 1. 大文件比普通文件消耗更多内存和CPU
+/// 2. 需要预留足够资源给小文件和其他系统进程
+/// 3. 避免过多大文件同时解析导致GC压力过大
+///
+/// # Arguments
+/// * `worker_count` - 当前Worker池大小
+/// * `free_memory_gb` - 系统可用内存（GB）
+/// * `cpu_count` - CPU核心数
+///
+/// # Returns
+/// 推荐的大文件最大并发数
+pub fn calculate_max_large_files_concurrent(
+    worker_count: usize,
+    free_memory_gb: f64,
+    cpu_count: usize,
+) -> usize {
+    // ===== 1. 基于内存的限制 =====
+    // 只使用一部分可用内存（留余量给小文件、系统、其他进程）
+    let available_memory_for_large_files = free_memory_gb * config::LARGE_FILES_MEMORY_RATIO;
+    let max_by_memory = (available_memory_for_large_files / config::MEMORY_PER_LARGE_FILE_WORKER_GB).floor() as usize;
+
+    // ===== 2. 基于CPU的限制 =====
+    // 大文件解析更耗CPU，使用更保守的比例
+    let max_by_cpu = ((cpu_count as f64 * config::LARGE_FILES_CPU_RATIO).floor() as usize)
+        .max(config::LARGE_FILES_CONCURRENT_MIN);
+
+    // ===== 3. 不超过Worker总数 =====
+    let max_by_workers = worker_count;
+
+    // ===== 4. 综合计算 =====
+    let calculated = max_by_memory.min(max_by_cpu).min(max_by_workers);
+
+    // ===== 5. 应用上下限 =====
+    let result = calculated
+        .max(config::LARGE_FILES_CONCURRENT_MIN)
+        .min(config::LARGE_FILES_CONCURRENT_ABSOLUTE_MAX);
+
+    log::info!("[大文件并发计算]");
+    log::info!(
+        "  可用内存: {:.1}GB, 大文件可用: {:.1}GB",
+        free_memory_gb,
+        available_memory_for_large_files
+    );
+    log::info!(
+        "  内存限制: {}, CPU限制: {}, Worker限制: {}",
+        max_by_memory, max_by_cpu, max_by_workers
+    );
+    log::info!("  计算结果: {}, 最终值: {}", calculated, result);
+
+    result
 }

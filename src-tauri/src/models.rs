@@ -16,6 +16,7 @@ pub struct DirectoryNode {
 
 /// 扫描配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScanConfig {
     pub selected_paths: Vec<String>,
     pub selected_extensions: Vec<String>,

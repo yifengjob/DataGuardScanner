@@ -5,7 +5,7 @@ use tokio::sync::mpsc;
 use serde::{Serialize, Deserialize};
 
 use crate::models::{ScanConfig, ScanResultItem};
-use crate::utils::concurrency::{calculate_actual_concurrency, create_semaphore};
+use crate::utils::concurrency::{calculate_actual_concurrency, calculate_max_large_files_concurrent, create_semaphore};
 use crate::utils::config;
 use crate::utils::scanner_helpers::{StagnationDetector, StagnationStatus};
 use crate::utils::power_manager::PowerManager;
@@ -78,9 +78,14 @@ pub async fn run_scan(
     let scanned_count = Arc::new(AtomicU64::new(0));
     let total_count = Arc::new(AtomicU64::new(0));
     
-    // 【智能调度】创建多队列调度器
-    let scheduler = Arc::new(MultiQueueScheduler::new(config::LARGE_FILE_MAX_CONCURRENCY));
-    log_info!("[智能调度] 启用多队列调度，大文件并发限制: {}", config::LARGE_FILE_MAX_CONCURRENCY);
+    // 【智能调度】动态计算大文件并发数
+    let max_large_concurrent = calculate_max_large_files_concurrent(
+        pool_size,
+        concurrency_info.free_memory_gb,
+        concurrency_info.cpu_count,
+    );
+    let scheduler = Arc::new(MultiQueueScheduler::new(max_large_concurrent));
+    log_info!("[智能调度] 启用多队列调度，大文件并发限制: {} (动态计算)", max_large_concurrent);
     
     // 【P0修复】生产者完成标志 - 用于通知消费者可以安全退出
     let producer_done = Arc::new(AtomicBool::new(false));
@@ -203,9 +208,9 @@ async fn process_file_with_timeout(
                     file_path,
                     file_size: task.file_size,
                     modified_time: task.modified_time,
-                    counts: std::collections::HashMap::new(), // TODO: 需要从stats中提取详细计数
+                    counts: stats.counts.clone(),  // ✅ 使用详细计数
                     total: stats.sensitive_count as u32,
-                    expression_matched: None, // TODO: 从stats中提取
+                    expression_matched: stats.expression_matched,  // ✅ 使用表达式匹配状态
                     unsupported_preview: false,
                 })
             } else {
